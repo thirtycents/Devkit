@@ -72,3 +72,67 @@ def generate_random_string(length: int = 8,
 
     return ''.join(secrets.choice(chars) for _ in range(length))
 
+
+def generate_secure_password(length: int = 16) -> str:
+    """
+    生成安全密码
+
+    Args:
+        length: 密码长度
+
+    Returns:
+        安全密码字符串
+    """
+    if length < 8:
+        raise ValueError("密码长度至少为 8 位")
+
+    # 确保密码包含所有字符类型
+    chars = string.ascii_letters + string.digits + "!@#$%^&*()-_=+"
+
+    # 至少包含一个每种类型的字符
+    password = [
+        secrets.choice(string.ascii_lowercase),
+        secrets.choice(string.ascii_uppercase),
+        secrets.choice(string.digits),
+        secrets.choice("!@#$%^&*()-_=+")
+    ]
+
+    # 填充剩余长度
+    for _ in range(length - 4):
+        password.append(secrets.choice(chars))
+
+    # 打乱顺序
+    secrets.SystemRandom().shuffle(password)
+
+    return ''.join(password)
+
+
+def generate_random_number(min_val: int = 0, max_val: int = 100) -> int:
+    """
+    生成随机整数
+
+    Args:
+        min_val: 最小值
+        max_val: 最大值
+
+    Returns:
+        随机整数
+    """
+    return secrets.randbelow(max_val - min_val + 1) + min_val
+
+
+def generate_random_float(min_val: float = 0.0, max_val: float = 1.0, precision: int = 2) -> float:
+    """
+    生成随机浮点数
+
+    Args:
+        min_val: 最小值
+        max_val: 最大值
+        precision: 小数位数
+
+    Returns:
+        随机浮点数
+    """
+    random_float = random.uniform(min_val, max_val)
+    return round(random_float, precision)
+
