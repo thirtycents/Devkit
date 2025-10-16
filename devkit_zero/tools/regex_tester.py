@@ -68,13 +68,22 @@ class RegexTester:
     def get_common_patterns(self) -> Dict[str, str]:
         """Get common regular expression patterns"""
         return {
+            # Email and Contact
             'Email': r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
+            'Email (Simple)': r'\S+@\S+\.\S+',
+            # URLs and Web
             'URL': r'https?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+',
-            'Phone': r'\b\d{3}[-.]?\d{3}[-.]?\d{4}\b',
+            'URL with Path': r'https?://[^\s/$.?#].[^\s]*',
+            'Domain Name': r'\b([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}\b',
+            # Phone Numbers
+            'Phone (US)': r'\b\d{3}[-.]?\d{3}[-.]?\d{4}\b',
+            'Phone (International)': r'\+\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}',
+            'Phone (with Extension)': r'\b\d{3}[-.]?\d{3}[-.]?\d{4}\s*(?:ext\.?|x)\s*\d{1,5}',
+            # Network
             'IP Address': r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b',
-            'Date (YYYY-MM-DD)': r'\b\d{4}-\d{2}-\d{2}\b',
-            'HTML Tag': r'<[^>]+>',
-            'Number': r'\b\d+\b'
+            'IP Address (with Port)': r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}:\d{1,5}\b',
+            'MAC Address': r'([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})',
+            'IPv6 Address': r'(?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4}',
         }
 
     def clear_history(self):
