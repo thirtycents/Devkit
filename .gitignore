@@ -57,3 +57,5 @@ Thumbs.db
 # Project specific
 temp/
 *.tmp
+/.vs/VSWorkspaceState.json
+/.vs/slnx.sqlite
