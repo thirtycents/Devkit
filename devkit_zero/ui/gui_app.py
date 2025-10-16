@@ -414,3 +414,35 @@ class DevKitGUI:
         # 创建状态栏
         self.create_status_bar()
 
+    def create_status_bar(self):
+        """创建状态栏"""
+        status_bar = ttk.Frame(self.root)
+        status_bar.pack(fill=tk.X, side=tk.BOTTOM)
+
+        status_label = ttk.Label(
+            status_bar,
+            text="DevKit-Zero 正则表达式测试器 | 就绪",
+            relief=tk.SUNKEN,
+            anchor=tk.W
+        )
+        status_label.pack(fill=tk.X, padx=5, pady=2)
+
+
+def main():
+    """启动GUI应用程序"""
+    try:
+        # 创建Tkinter根窗口
+        root = tk.Tk()
+
+        # 创建GUI应用
+        app = DevKitGUI(root)
+
+        # 启动主循环
+        root.mainloop()
+
+    except Exception as e:
+        print(f"启动GUI时发生错误: {e}")
+
+
+if __name__ == "__main__":
+    main()
