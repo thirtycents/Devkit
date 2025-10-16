@@ -389,3 +389,28 @@ class RegexTesterTab(ttk.Frame):
             messagebox.showerror("错误", f"复制失败: {e}")
 
 
+class DevKitGUI:
+    """DevKit-Zero GUI主类"""
+
+    def __init__(self, root):
+        self.root = root
+        self.root.title("DevKit-Zero - 正则表达式测试器")
+        self.root.geometry("900x700")
+        self.setup_ui()
+
+    def setup_ui(self):
+        """设置UI布局"""
+        # 创建正则表达式测试器实例
+        self.regex_tester = RegexTester()
+
+        # 创建标签页控件
+        self.notebook = ttk.Notebook(self.root)
+        self.notebook.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        # 创建正则表达式测试器标签页
+        self.regex_tab = RegexTesterTab(self.notebook, self.regex_tester)
+        self.notebook.add(self.regex_tab, text="🔍 正则表达式测试器")
+
+        # 创建状态栏
+        self.create_status_bar()
+
