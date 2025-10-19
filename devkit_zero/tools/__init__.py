@@ -10,7 +10,7 @@
 
 # TODO: 导入并注册所有工具
 # from . import formatter
-# from . import random_gen
+from . import random_gen
 # from . import diff_tool
 # from . import converter
 # from . import linter
@@ -20,16 +20,16 @@
 # from . import port_checker
 
 # 工具注册字典
-# AVAILABLE_TOOLS = {
-#     'formatter': formatter,
-#     'random_gen': random_gen,
-#     'diff_tool': diff_tool,
-#     'converter': converter,
-#     'linter': linter,
-#     'regex_tester': regex_tester,
-#     'batch_process': batch_process,
-#     'markdown_preview': markdown_preview,
-#     'port_checker': port_checker,
-# }
+AVAILABLE_TOOLS = {
+    # 'formatter': formatter,
+    'random_gen': random_gen,
+    # 'diff_tool': diff_tool,
+    # 'converter': converter,
+    # 'linter': linter,
+    # 'regex_tester': regex_tester,
+    # 'batch_process': batch_process,
+    # 'markdown_preview': markdown_preview,
+    # 'port_checker': port_checker,
+}
 
 __all__ = []
