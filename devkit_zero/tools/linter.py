@@ -85,6 +85,14 @@ class CodeLinter:
                 'column': node.col_offset,
                 'severity': 'info'
             })
+        # 检查可变类型默认参数
+        for arg in node.args.defaults:
+            if isinstance(arg, (ast.List, ast.Dict, ast.Set)):
+                self._add_issue(
+                    'mutable_default_argument',
+                    f"不应使用可变类型 (list, dict, set) 作为函数 '{node.name}' 的默认参数",
+                    arg  # The node for the argument itself
+                )
     
     def check_class_def(self, node: ast.ClassDef):
         """检查类定义"""
