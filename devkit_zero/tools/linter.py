@@ -12,7 +12,8 @@ class CodeLinter:
             'naming_convention': 'warning',
             'missing_docstring': 'info',
             'import_style': 'warning',
-            'syntax_error': 'error'
+            'syntax_error': 'error',
+            'mutable_default_argument': 'error'
         }
         if config:
             self.config.update(config)
