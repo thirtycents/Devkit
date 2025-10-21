@@ -5,8 +5,17 @@ from typing import List, Dict, Any
 
 
 class CodeLinter:
-    def __init__(self):
+    def __init__(self, config: dict = None):
         self.issues = []
+        # 默认配置
+        self.config = {
+            'naming_convention': 'warning',
+            'missing_docstring': 'info',
+            'import_style': 'warning',
+            'syntax_error': 'error'
+        }
+        if config:
+            self.config.update(config)
     
     def check_python_file(self, file_path: str) -> List[Dict[str, Any]]:
         """检查 Python 文件"""
