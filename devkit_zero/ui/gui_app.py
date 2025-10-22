@@ -105,41 +105,41 @@ class RegexTester:
 
 
 class DevKitZeroGUI:
-    """DevKit-Zero GUI 主类"""
+    """DevKit-Zero GUI Main Class"""
 
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("DevKit-Zero - 零依赖开发者工具箱")
+        self.root.title("DevKit-Zero - Zero-dependency Developer Toolkit")
         self.root.geometry("900x700")
         self.root.resizable(True, True)
 
-        # 创建正则表达式测试器实例
+        # Create regex tester instance
         self.regex_tester = RegexTester()
 
         self.setup_ui()
 
     def setup_ui(self):
-        """设置用户界面主框架"""
+        """Set up main UI framework"""
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
-        # 配置权重以支持缩放
+        # Configure weights for scaling
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         main_frame.columnconfigure(1, weight=1)
         main_frame.rowconfigure(1, weight=1)
 
-        # 工具选择区域
-        tool_frame = ttk.LabelFrame(main_frame, text="工具选择", padding="10")
+        # Tool selection area
+        tool_frame = ttk.LabelFrame(main_frame, text="Tool Selection", padding="10")
         tool_frame.grid(row=0, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 10))
 
         self.tool_var = tk.StringVar(value="regex_tester")
         tools = [
-            ("正则表达式测试器", "regex_tester"),
-            ("工具 2", "tool2"),
-            ("工具 3", "tool3"),
-            ("工具 4", "tool4"),
-            ("工具 5", "tool5")
+            ("Regex Tester", "regex_tester"),
+            ("Tool 2", "tool2"),
+            ("Tool 3", "tool3"),
+            ("Tool 4", "tool4"),
+            ("Tool 5", "tool5")
         ]
 
         for i, (name, value) in enumerate(tools):
@@ -148,52 +148,52 @@ class DevKitZeroGUI:
                 value=value, command=self.on_tool_change
             ).grid(row=0, column=i, padx=5)
 
-        # 左侧控制面板
-        control_frame = ttk.LabelFrame(main_frame, text="控制面板", padding="10")
+        # Left control panel
+        control_frame = ttk.LabelFrame(main_frame, text="Control Panel", padding="10")
         control_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=(0, 10))
         control_frame.columnconfigure(0, weight=1)
         control_frame.rowconfigure(0, weight=1)
 
-        # 右侧结果面板
-        result_frame = ttk.LabelFrame(main_frame, text="结果输出", padding="10")
+        # Right result panel
+        result_frame = ttk.LabelFrame(main_frame, text="Result Output", padding="10")
         result_frame.grid(row=1, column=1, sticky=(tk.W, tk.E, tk.N, tk.S))
         result_frame.columnconfigure(0, weight=1)
         result_frame.rowconfigure(0, weight=1)
 
-        # 保存面板引用
+        # Save panel references
         self.control_container = control_frame
         self.result_container = result_frame
 
-        # 初始化显示正则表达式测试器
+        # Initialize with regex tester
         self.on_tool_change()
 
     def on_tool_change(self):
-        """工具切换时更新控制面板和结果面板"""
-        # 清空控制面板
+        """Update control panel and result panel when tool changes"""
+        # Clear control panel
         for widget in self.control_container.winfo_children():
             widget.destroy()
 
-        # 清空结果面板
+        # Clear result panel
         for widget in self.result_container.winfo_children():
             widget.destroy()
 
-        # 根据选择的工具加载对应的UI
+        # Load corresponding UI based on selected tool
         tool = self.tool_var.get()
         if tool == "regex_tester":
             self.setup_regex_tester_ui()
         else:
-            # 其他工具的占位提示
-            ttk.Label(self.control_container, text=f"工具 {tool} 的选项将在这里显示").grid(padx=10, pady=20)
-            ttk.Label(self.result_container, text=f"工具 {tool} 的结果将在这里显示").grid(padx=10, pady=20)
+            # Placeholder for other tools
+            ttk.Label(self.control_container, text=f"Options for {tool} will be displayed here").grid(padx=10, pady=20)
+            ttk.Label(self.result_container, text=f"Results for {tool} will be displayed here").grid(padx=10, pady=20)
 
     def setup_regex_tester_ui(self):
-        """设置正则表达式测试器的UI组件"""
-        # 控制面板 - 正则表达式相关控件
+        """Set up UI components for regex tester"""
+        # Control panel - regex related widgets
         control_frame = ttk.Frame(self.control_container)
         control_frame.pack(fill=tk.BOTH, expand=True)
 
-        # 常用模式选择
-        ttk.Label(control_frame, text="常用模式:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        # Common patterns selection
+        ttk.Label(control_frame, text="Common Patterns:").grid(row=0, column=0, sticky=tk.W, pady=5)
         self.pattern_var = tk.StringVar()
         self.common_patterns_combo = ttk.Combobox(
             control_frame,
@@ -202,93 +202,93 @@ class DevKitZeroGUI:
             state="readonly",
             width=30
         )
-        self.common_patterns_combo.set("选择常用模式...")
+        self.common_patterns_combo.set("Select common pattern...")
         self.common_patterns_combo.grid(row=0, column=1, sticky=tk.EW, pady=5, padx=(5, 0))
         self.common_patterns_combo.bind('<<ComboboxSelected>>', self.on_pattern_selected)
 
-        # 自定义模式输入
-        ttk.Label(control_frame, text="自定义模式:").grid(row=1, column=0, sticky=tk.NW, pady=5)
+        # Custom pattern input
+        ttk.Label(control_frame, text="Custom Pattern:").grid(row=1, column=0, sticky=tk.NW, pady=5)
         self.pattern_entry = scrolledtext.ScrolledText(control_frame, width=40, height=3)
         self.pattern_entry.grid(row=1, column=1, sticky=tk.EW, pady=5, padx=(5, 0))
 
-        # 选项框架
-        options_frame = ttk.LabelFrame(control_frame, text="选项", padding=5)
+        # Options frame
+        options_frame = ttk.LabelFrame(control_frame, text="Options", padding=5)
         options_frame.grid(row=2, column=1, sticky=tk.EW, pady=5, padx=(5, 0))
 
-        # 正则表达式标志
+        # Regex flags
         self.ignore_case_var = tk.BooleanVar()
         ttk.Checkbutton(
             options_frame,
-            text="忽略大小写 (re.IGNORECASE)",
+            text="Ignore case (re.IGNORECASE)",
             variable=self.ignore_case_var
         ).pack(anchor=tk.W)
 
         self.multiline_var = tk.BooleanVar()
         ttk.Checkbutton(
             options_frame,
-            text="多行模式 (re.MULTILINE)",
+            text="Multiline mode (re.MULTILINE)",
             variable=self.multiline_var
         ).pack(anchor=tk.W)
 
         self.dotall_var = tk.BooleanVar()
         ttk.Checkbutton(
             options_frame,
-            text="点匹配换行 (re.DOTALL)",
+            text="Dot matches newlines (re.DOTALL)",
             variable=self.dotall_var
         ).pack(anchor=tk.W)
 
-        # 测试文本区域
-        ttk.Label(control_frame, text="测试文本:").grid(row=3, column=0, sticky=tk.NW, pady=5)
+        # Test text area
+        ttk.Label(control_frame, text="Test Text:").grid(row=3, column=0, sticky=tk.NW, pady=5)
         self.text_area = scrolledtext.ScrolledText(control_frame, width=40, height=10)
         self.text_area.grid(row=3, column=1, sticky=tk.NSEW, pady=5, padx=(5, 0))
 
-        # 按钮区域
+        # Buttons area
         button_frame = ttk.Frame(control_frame)
         button_frame.grid(row=4, column=0, columnspan=2, sticky=tk.EW, pady=10)
 
         self.test_button = ttk.Button(
             button_frame,
-            text="测试正则表达式",
+            text="Test Regex",
             command=self.test_regex
         )
         self.test_button.pack(side=tk.LEFT, padx=(0, 10))
 
         self.clear_button = ttk.Button(
             button_frame,
-            text="清空所有",
+            text="Clear All",
             command=self.clear_all
         )
         self.clear_button.pack(side=tk.LEFT, padx=(0, 10))
 
         self.copy_result_button = ttk.Button(
             button_frame,
-            text="复制结果",
+            text="Copy Results",
             command=self.copy_results
         )
         self.copy_result_button.pack(side=tk.LEFT)
 
-        # 配置权重，使控件可以随窗口缩放
+        # Configure weights for scaling
         control_frame.columnconfigure(1, weight=1)
         control_frame.rowconfigure(3, weight=1)
 
-        # 设置快捷键
+        # Set up shortcuts
         self.text_area.bind('<Control-Return>', lambda e: self.test_regex())
         self.pattern_entry.bind('<Control-Return>', lambda e: self.test_regex())
 
-        # 结果面板 - 正则表达式测试结果
+        # Result panel - regex test results
         result_frame = ttk.Frame(self.result_container)
         result_frame.pack(fill=tk.BOTH, expand=True)
 
-        # 匹配统计
+        # Match statistics
         stats_frame = ttk.Frame(result_frame)
         stats_frame.pack(fill=tk.X, pady=(0, 10))
-        self.stats_label = ttk.Label(stats_frame, text="匹配结果: 0 个匹配", font=('Arial', 10, 'bold'))
+        self.stats_label = ttk.Label(stats_frame, text="Match Results: 0 matches", font=('Arial', 10, 'bold'))
         self.stats_label.pack(side=tk.LEFT)
-        self.pattern_status_label = ttk.Label(stats_frame, text="模式状态: 未测试", foreground="gray")
+        self.pattern_status_label = ttk.Label(stats_frame, text="Pattern Status: Not tested", foreground="gray")
         self.pattern_status_label.pack(side=tk.RIGHT)
 
-        # 匹配详情
-        ttk.Label(result_frame, text="匹配详情:").pack(anchor=tk.W, pady=(0, 5))
+        # Match details
+        ttk.Label(result_frame, text="Match Details:").pack(anchor=tk.W, pady=(0, 5))
         self.matches_text = scrolledtext.ScrolledText(
             result_frame,
             width=60,
@@ -297,8 +297,8 @@ class DevKitZeroGUI:
         )
         self.matches_text.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
 
-        # 替换结果显示
-        replace_frame = ttk.LabelFrame(result_frame, text="替换结果", padding=5)
+        # Replacement result display
+        replace_frame = ttk.LabelFrame(result_frame, text="Replacement Result", padding=5)
         replace_frame.pack(fill=tk.X)
         self.replace_text = scrolledtext.ScrolledText(
             replace_frame,
@@ -309,7 +309,7 @@ class DevKitZeroGUI:
         self.replace_text.pack(fill=tk.BOTH, expand=True)
 
     def on_pattern_selected(self, event):
-        """当选择常用模式时的回调"""
+        """Callback when a common pattern is selected"""
         pattern_name = self.pattern_var.get()
         common_patterns = self.regex_tester.get_common_patterns()
 
@@ -318,19 +318,19 @@ class DevKitZeroGUI:
             self.pattern_entry.insert(1.0, common_patterns[pattern_name])
 
     def test_regex(self):
-        """测试正则表达式"""
+        """Test regular expression"""
         pattern = self.pattern_entry.get(1.0, tk.END).strip()
         text = self.text_area.get(1.0, tk.END)
 
         if not pattern:
-            messagebox.showerror("错误", "请输入正则表达式模式")
+            messagebox.showerror("Error", "Please enter a regex pattern")
             return
 
         if not text.strip():
-            messagebox.showwarning("警告", "请输入测试文本")
+            messagebox.showwarning("Warning", "Please enter test text")
             return
 
-        # 计算标志
+        # Calculate flags
         flags = 0
         if self.ignore_case_var.get():
             flags |= re.IGNORECASE
@@ -339,35 +339,35 @@ class DevKitZeroGUI:
         if self.dotall_var.get():
             flags |= re.DOTALL
 
-        # 测试正则表达式
+        # Test regex
         result = self.regex_tester.test_pattern(pattern, text, flags)
 
-        # 显示结果
+        # Display results
         self.display_results(result)
 
     def display_results(self, result):
-        """显示匹配结果"""
-        # 更新统计信息
+        """Display match results"""
+        # Update statistics
         if result['success']:
             self.stats_label.config(
-                text=f"匹配结果: {result['match_count']} 个匹配",
+                text=f"Match Results: {result['match_count']} matches",
                 foreground="green"
             )
             self.pattern_status_label.config(
-                text="模式状态: 有效",
+                text="Pattern Status: Valid",
                 foreground="green"
             )
         else:
             self.stats_label.config(
-                text=f"错误: {result['error']}",
+                text=f"Error: {result['error']}",
                 foreground="red"
             )
             self.pattern_status_label.config(
-                text="模式状态: 无效",
+                text="Pattern Status: Invalid",
                 foreground="red"
             )
 
-        # 显示匹配详情
+        # Display match details
         self.matches_text.config(state=tk.NORMAL)
         self.matches_text.delete(1.0, tk.END)
 
@@ -375,29 +375,29 @@ class DevKitZeroGUI:
             if result['matches']:
                 for i, match in enumerate(result['matches']):
                     self.matches_text.insert(tk.END,
-                        f"匹配 {i+1}:\n"
-                        f"  位置: {match['start']}-{match['end']}\n"
-                        f"  内容: '{match['group']}'\n"
-                    )
+                                             f"Match {i + 1}:\n"
+                                             f"  Position: {match['start']}-{match['end']}\n"
+                                             f"  Content: '{match['group']}'\n"
+                                             )
                     if match['groups']:
                         groups_str = ', '.join(f"'{g}'" if g else 'None' for g in match['groups'])
-                        self.matches_text.insert(tk.END, f"  分组: [{groups_str}]\n")
+                        self.matches_text.insert(tk.END, f"  Groups: [{groups_str}]\n")
                     self.matches_text.insert(tk.END, "-" * 50 + "\n")
             else:
-                self.matches_text.insert(tk.END, "没有找到匹配项\n")
+                self.matches_text.insert(tk.END, "No matches found\n")
         else:
-            self.matches_text.insert(tk.END, f"正则表达式错误: {result['error']}\n")
+            self.matches_text.insert(tk.END, f"Regex error: {result['error']}\n")
 
         self.matches_text.config(state=tk.DISABLED)
 
-        # 显示替换结果
+        # Display replacement result
         self.replace_text.config(state=tk.NORMAL)
         self.replace_text.delete(1.0, tk.END)
         self.replace_text.insert(tk.END, result['replaced_text'])
         self.replace_text.config(state=tk.DISABLED)
 
     def clear_all(self):
-        """清空所有输入和结果"""
+        """Clear all inputs and results"""
         self.pattern_entry.delete(1.0, tk.END)
         self.text_area.delete(1.0, tk.END)
 
@@ -409,26 +409,26 @@ class DevKitZeroGUI:
         self.replace_text.delete(1.0, tk.END)
         self.replace_text.config(state=tk.DISABLED)
 
-        self.stats_label.config(text="匹配结果: 0 个匹配", foreground="black")
-        self.pattern_status_label.config(text="模式状态: 未测试", foreground="gray")
+        self.stats_label.config(text="Match Results: 0 matches", foreground="black")
+        self.pattern_status_label.config(text="Pattern Status: Not tested", foreground="gray")
 
         self.regex_tester.clear_history()
 
     def copy_results(self):
-        """复制结果到剪贴板"""
+        """Copy results to clipboard"""
         try:
             results = self.matches_text.get(1.0, tk.END)
             if results.strip():
                 self.root.clipboard_clear()
                 self.root.clipboard_append(results)
-                messagebox.showinfo("成功", "结果已复制到剪贴板")
+                messagebox.showinfo("Success", "Results copied to clipboard")
             else:
-                messagebox.showwarning("警告", "没有可复制的内容")
+                messagebox.showwarning("Warning", "No content to copy")
         except Exception as e:
-            messagebox.showerror("错误", f"复制失败: {e}")
+            messagebox.showerror("Error", f"Copy failed: {e}")
 
     def run(self):
-        """启动 GUI"""
+        """Launch GUI"""
         self.root.mainloop()
 
 
