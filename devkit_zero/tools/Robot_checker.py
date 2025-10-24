@@ -7,7 +7,7 @@ Detailed Description:
 - Extract sitemap information
 - Show crawler restrictions such as delay
 
-Author: Your Name
+Author: Linjunyu
 Creation Date: 2024-XX-XX
 """
 
@@ -249,7 +249,6 @@ def register_parser(subparsers) -> None:
         action='store_true',
         help='Display raw robots.txt content without parsing'
     )
-
 
 def main():
     """Standalone execution entry point"""
