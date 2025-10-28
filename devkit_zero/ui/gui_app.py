@@ -11,7 +11,7 @@ from tkinter import ttk, messagebox, scrolledtext
 import os
 
 # 使用相对导入
-from ..tools import random_gen
+from ..tools import random_gen, converter
 
 
 class DevKitZeroGUI:
@@ -54,7 +54,7 @@ class DevKitZeroGUI:
             # ("代码格式化", "formatter"),
             ("随机数据生成", "random_gen"),
             # ("文本差异对比", "diff_tool"),
-            # ("数据格式转换", "converter"),
+            ("数据格式转换", "converter"),
             # ("代码静态检查", "linter")
         ]
 
@@ -97,13 +97,14 @@ class DevKitZeroGUI:
         #     self.setup_random_gen_ui()
         # elif tool == "diff_tool":
         #     self.setup_diff_tool_ui()
-        # elif tool == "converter":
-        #     self.setup_converter_ui()
         # elif tool == "linter":
         #     self.setup_linter_ui()
 
         if tool == "random_gen":
             self.setup_random_gen_ui()
+        elif tool == "converter":
+            self.setup_converter_ui()
+
 
     def setup_random_gen_ui(self):
         """设置随机数据生成工具界面"""
@@ -128,6 +129,32 @@ class DevKitZeroGUI:
 
         # 初始化参数界面
         self.on_random_type_change()
+
+    def setup_converter_ui(self):
+        """设置数据格式转换工具界面"""
+        # 转换格式选择
+        ttk.Label(self.control_container, text="从格式:").grid(row=0, column=0, sticky=tk.W, pady=2)
+        self.convert_from_var = tk.StringVar(value="json")
+        from_combo = ttk.Combobox(self.control_container, textvariable=self.convert_from_var,
+                                  values=["json", "csv"], state="readonly")
+        from_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=2)
+
+        ttk.Label(self.control_container, text="到格式:").grid(row=1, column=0, sticky=tk.W, pady=2)
+        self.convert_to_var = tk.StringVar(value="csv")
+        to_combo = ttk.Combobox(self.control_container, textvariable=self.convert_to_var,
+                                values=["json", "csv"], state="readonly")
+        to_combo.grid(row=1, column=1, sticky=(tk.W, tk.E), pady=2)
+
+        # 输入数据
+        ttk.Label(self.control_container, text="输入数据:").grid(row=2, column=0, sticky=tk.W, pady=(10, 2))
+        self.convert_input_text = tk.Text(self.control_container, height=12, wrap=tk.WORD)
+        self.convert_input_text.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=2)
+
+        # 执行按钮
+        ttk.Button(self.control_container, text="转换格式",
+                   command=self.run_converter).grid(row=4, column=0, columnspan=2, pady=(10, 0))
+
+        self.control_container.columnconfigure(1, weight=1)
 
     def on_random_type_change(self, event=None):
         """随机数据类型改变时更新参数界面"""
@@ -227,6 +254,28 @@ class DevKitZeroGUI:
                 result = random_gen.generate_random_hex_color()
             else:
                 raise ValueError(f"不支持的生成类型: {gen_type}")
+
+            self.display_result(result)
+
+        except Exception as e:
+            self.display_error(str(e))
+
+    def run_converter(self):
+        """运行数据格式转换"""
+        try:
+            from_format = self.convert_from_var.get()
+            to_format = self.convert_to_var.get()
+            input_data = self.convert_input_text.get(1.0, tk.END).strip()
+
+            if not input_data:
+                raise ValueError("请输入要转换的数据")
+
+            if from_format == "json" and to_format == "csv":
+                result = converter.json_to_csv(input_data)
+            elif from_format == "csv" and to_format == "json":
+                result = converter.csv_to_json(input_data)
+            else:
+                raise ValueError(f"不支持从 {from_format} 转换到 {to_format}")
 
             self.display_result(result)
 
