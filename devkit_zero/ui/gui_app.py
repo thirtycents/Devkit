@@ -10,7 +10,7 @@ import os
 
 # 使用相对导入
 # from ..tools import formatter, random_gen, diff_tool, converter, linter
-from ..tools import formatter, random_gen, diff_tool, converter, linter, port_checker
+from ..tools import formatter, random_gen, diff_tool, converter, linter, port_checker, api_contract_diff
 
 
 class DevKitZeroGUI:
@@ -55,7 +55,8 @@ class DevKitZeroGUI:
             ("文本差异对比", "diff_tool"),
             ("数据格式转换", "converter"),
             ("代码静态检查", "linter"),
-            ("端口检查", "port_checker")
+            ("端口检查", "port_checker"),
+            ("接口契约对比器", "api_diff")
         ]
         
         for i, (name, value) in enumerate(tools):
@@ -103,6 +104,8 @@ class DevKitZeroGUI:
             self.setup_linter_ui()
         elif tool == "port_checker":
             self.setup_port_checker_ui()
+        elif tool == "api_diff":
+            self.setup_api_diff_ui()
     
     def setup_formatter_ui(self):
         """设置代码格式化工具界面"""
@@ -456,7 +459,6 @@ class DevKitZeroGUI:
             pass
     
 
-
     def setup_port_checker_ui(self):
         """设置端口检查工具界面"""
         import tkinter as tk
@@ -564,6 +566,192 @@ class DevKitZeroGUI:
         except Exception as e:
             self.display_error(str(e))
 
+
+    
+    def setup_api_diff_ui(self):
+        import tkinter as tk
+        from tkinter import ttk
+
+        # ===== 顶部：输出格式 =====
+        ttk.Label(self.control_container, text="输出格式:").grid(row=0, column=0, sticky=tk.W, pady=2)
+        self.api_fmt_var = tk.StringVar(value="text")
+        ttk.Combobox(self.control_container, textvariable=self.api_fmt_var,
+                    values=["text", "json", "md"], state="readonly")\
+            .grid(row=0, column=1, sticky=(tk.W, tk.E), pady=2)
+
+        # ===== 契约 v1 =====
+        ttk.Label(self.control_container, text="契约 v1:").grid(row=1, column=0, sticky=tk.W, pady=(8, 2))
+        ttk.Button(self.control_container, text="从文件加载",
+                command=lambda: self.load_contract_from_file("v1"))\
+            .grid(row=1, column=1, sticky=tk.E, pady=(8, 2))
+
+        # 说明小字（灰色）
+        tk.Label(self.control_container,
+                text="支持：简化契约 JSON 或 OpenAPI JSON",
+                fg="#666").grid(row=2, column=0, columnspan=2, sticky=tk.W, pady=(0, 6))
+
+        # v1 文本框（行号顺延）
+        self.api_old_text = tk.Text(self.control_container, height=12)
+        self.api_old_text.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E))
+
+        # ===== 契约 v2 =====
+        ttk.Label(self.control_container, text="契约 v2:").grid(row=4, column=0, sticky=tk.W, pady=(8, 2))
+        ttk.Button(self.control_container, text="从文件加载",
+                command=lambda: self.load_contract_from_file("v2"))\
+            .grid(row=4, column=1, sticky=tk.E, pady=(8, 2))
+
+        # 说明小字（灰色）
+        tk.Label(self.control_container,
+                text="支持：简化契约 JSON 或 OpenAPI JSON",
+                fg="#666").grid(row=5, column=0, columnspan=2, sticky=tk.W, pady=(0, 6))
+
+        # v2 文本框（行号顺延）
+        self.api_new_text = tk.Text(self.control_container, height=12)
+        self.api_new_text.grid(row=6, column=0, columnspan=2, sticky=(tk.W, tk.E))
+
+        # ===== 操作区 =====
+        ttk.Button(self.control_container, text="对比契约", command=self.run_api_diff)\
+            .grid(row=7, column=0, columnspan=2, pady=(10, 0))
+        ttk.Button(self.control_container, text="填充示例", command=self.fill_demo_api_diff)\
+            .grid(row=8, column=0, columnspan=2, pady=(6, 0))
+
+        # 右侧列可伸缩
+        self.control_container.columnconfigure(1, weight=1)
+
+    '''
+    def setup_api_diff_ui(self):
+        import tkinter as tk
+        from tkinter import ttk
+
+        # 输出格式
+        ttk.Label(self.control_container, text="输出格式:").grid(row=0, column=0, sticky=tk.W, pady=2)
+        self.api_fmt_var = tk.StringVar(value="text")
+        ttk.Combobox(self.control_container, textvariable=self.api_fmt_var,
+                    values=["text", "json", "md"], state="readonly")\
+            .grid(row=0, column=1, sticky=(tk.W, tk.E), pady=2)
+
+        # 契约 v1
+        ttk.Label(self.control_container, text="契约 v1:").grid(row=1, column=0, sticky=tk.W, pady=(8, 2))
+        ttk.Button(self.control_container, text="从文件加载",
+                command=lambda: self.load_contract_from_file("v1"))\
+            .grid(row=1, column=1, sticky=tk.E, pady=(8, 2))
+        self.api_old_text = tk.Text(self.control_container, height=12)
+        self.api_old_text.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E))
+
+        # 契约 v2
+        ttk.Label(self.control_container, text="契约 v2:").grid(row=3, column=0, sticky=tk.W, pady=(8, 2))
+        ttk.Button(self.control_container, text="从文件加载",
+                command=lambda: self.load_contract_from_file("v2"))\
+            .grid(row=3, column=1, sticky=tk.E, pady=(8, 2))
+        self.api_new_text = tk.Text(self.control_container, height=12)
+        self.api_new_text.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E))
+
+        # 操作区
+        ttk.Button(self.control_container, text="对比契约", command=self.run_api_diff)\
+            .grid(row=5, column=0, columnspan=2, pady=(10, 0))
+        ttk.Button(self.control_container, text="填充示例", command=self.fill_demo_api_diff)\
+            .grid(row=6, column=0, columnspan=2, pady=(6, 0))
+
+        self.control_container.columnconfigure(1, weight=1)
+    '''
+
+    def load_contract_from_file(self, target="v1"):
+        import json
+        from tkinter import filedialog
+        path = filedialog.askopenfilename(
+            title="选择契约 JSON 文件",
+            filetypes=[("JSON 文件", "*.json"), ("所有文件", "*.*")]
+        )
+        if not path:
+            return
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                raw = f.read()
+            # 提前校验 JSON，便于在 GUI 里给出明确信息
+            json.loads(raw)
+        except Exception as e:
+            self.display_error(f"读取/解析失败：{e}")
+            return
+
+        widget = self.api_old_text if target == "v1" else self.api_new_text
+        widget.delete("1.0", "end")
+        widget.insert("1.0", raw)
+        self.display_result(f"已加载：{path}")
+
+
+    def run_api_diff(self):
+        try:
+            old_text = self.api_old_text.get("1.0", "end").strip()
+            new_text = self.api_new_text.get("1.0", "end").strip()
+            if not old_text or not new_text:
+                raise ValueError("请分别在“契约 v1 / 契约 v2”填入 JSON 文本或点击“从文件加载”")
+            old = api_contract_diff.parse_contract(text=old_text)
+            new = api_contract_diff.parse_contract(text=new_text)
+            report = api_contract_diff.compare_contracts(old, new)
+
+            fmt = self.api_fmt_var.get()
+            if fmt == "json":
+                out = api_contract_diff.format_report_json(report)
+            elif fmt == "md":
+                out = api_contract_diff.format_report_md(report)
+            else:
+                out = api_contract_diff.format_report_text(report)
+
+            self.display_result(out)
+        except Exception as e:
+            self.display_error(str(e))
+
+    def fill_demo_api_diff(self):
+        demo_v1 = '''{
+      "apis": [
+        {
+        "name": "GetUser",
+        "method": "GET",
+        "path": "/users/{id}",
+        "params": [{"in":"path","name":"id","type":"string","required":true}],
+        "responses": {"200":{"type":"object","required":["id"],
+            "properties":{"id":{"type":"string"}, "name":{"type":"string"}}}}
+        },
+        {
+        "name": "ListUsers",
+        "method": "GET",
+        "path": "/users",
+        "query": [{"name":"active","type":"boolean","required":false}],
+        "responses": {"200":{"type":"object","properties":{"items":{"type":"array",
+            "items":{"type":"object","properties":{"id":{"type":"string"}}}}}}}
+        }
+    ]
+    }'''
+        demo_v2 = '''{
+      "apis": [
+        {
+        "name": "GetUser",
+        "method": "GET",
+        "path": "/users/{id}",
+        "params": [{"in":"path","name":"id","type":"string","required":true}],
+        "responses": {"200":{"type":"object","required":["id"],
+            "properties":{"id":{"type":"string"}, "email":{"type":"string"}}}}
+        },
+        {
+        "name": "ListUsers",
+        "method": "GET",
+        "path": "/users",
+        "query": [
+            {"name":"active","type":"boolean","required":false},
+            {"name":"page","type":"integer","required":true}
+        ],
+        "responses": {"200":{"type":"object","properties":{"items":{"type":"array",
+            "items":{"type":"object","properties":{"id":{"type":"string"}}}}}}}
+        },
+        {"name":"CreateUser","method":"POST","path":"/users",
+        "request":{"type":"object","required":["name"],
+        "properties":{"name":{"type":"string"},"age":{"type":"integer"}}},
+        "responses":{"201":{"type":"object","properties":{"id":{"type":"string"}}}}}
+    ]
+    }'''
+        self.api_old_text.delete("1.0", "end"); self.api_old_text.insert("1.0", demo_v1)
+        self.api_new_text.delete("1.0", "end"); self.api_new_text.insert("1.0", demo_v2)
+        
 
 if __name__ == "__main__":
     app = DevKitZeroGUI()
