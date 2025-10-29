@@ -1,43 +1,91 @@
+#!/usr/bin/env python3
 """
-DevKit-Zero 命令行界面入口
-
-这个模块实现命令行工具的主入口。
+DevKit-Zero 命令行界面
+提供统一的 CLI 入口点
 """
 
 import argparse
 import sys
+from typing import Optional
 
-# TODO: 实现CLI入口
-#
-# def main():
-#     """CLI主函数"""
-#     parser = argparse.ArgumentParser(
-#         prog='devkit-zero',
-#         description='零依赖开发者工具箱'
-#     )
-#     
-#     parser.add_argument('--version', '-V', action='version', 
-#                        version='%(prog)s 0.1.0')
-#     
-#     # 添加子命令
-#     subparsers = parser.add_subparsers(dest='tool', help='可用工具')
-#     
-#     # 注册各个工具的参数解析器
-#     # from .tools import formatter, random_gen, ...
-#     # formatter.register_parser(subparsers)
-#     # random_gen.register_parser(subparsers)
-#     # ...
-#     
-#     args = parser.parse_args()
-#     
-#     if not args.tool:
-#         parser.print_help()
-#         return 0
-#     
-#     # 执行对应工具
-#     # ...
-#     
-#     return 0
-#
-# if __name__ == "__main__":
-#     sys.exit(main())
+from .tools import formatter, random_gen, diff_tool, converter, linter, regex_tester, batch_process, markdown_preview, port_checker, unused_func_detector
+from .__version__ import __version__, __description__
+
+
+def create_parser() -> argparse.ArgumentParser:
+    """创建主命令行解析器"""
+    parser = argparse.ArgumentParser(
+        prog='devkit-zero',
+        description=__description__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+示例用法:
+  devkit-zero format --input "def hello(): print('hi')" --language python
+  devkit-zero random uuid
+  devkit-zero diff --text1 "hello" --text2 "world"
+  devkit-zero lint --code "def bad_function(): pass"
+  
+更多信息请访问: https://github.com/devkit-zero/devkit-zero
+        """
+    )
+    
+    parser.add_argument(
+        '--version', '-V',
+        action='version',
+        version=f'DevKit-Zero {__version__}'
+    )
+    
+    # 创建子命令
+    subparsers = parser.add_subparsers(
+        dest='tool',
+        help='可用工具',
+        metavar='TOOL'
+    )
+    subparsers.required = True
+    
+    # 注册所有工具的子命令
+    formatter.register_parser(subparsers)
+    random_gen.register_parser(subparsers)
+    diff_tool.register_parser(subparsers)
+    converter.register_parser(subparsers)
+    linter.register_parser(subparsers)
+    regex_tester.register_parser(subparsers)
+    batch_process.register_parser(subparsers)
+    markdown_preview.register_parser(subparsers)
+    port_checker.register_parser(subparsers)
+    unused_func_detector.register_parser(subparsers)
+    
+    return parser
+
+
+def main(argv: Optional[list] = None) -> int:
+    """主入口函数"""
+    parser = create_parser()
+    
+    try:
+        args = parser.parse_args(argv)
+        
+        # 执行对应的工具
+        result = args.func(args)
+        
+        if result is not None:
+            print(result)
+        
+        return 0
+        
+    except KeyboardInterrupt:
+        print("\n操作被用户取消", file=sys.stderr)
+        return 130
+        
+    except Exception as e:
+        print(f"错误: {e}", file=sys.stderr)
+        return 1
+
+
+def cli() -> int:
+    """CLI 入口点（用于 entry_points）"""
+    return main()
+
+
+if __name__ == '__main__':
+    sys.exit(main())
