@@ -8,8 +8,14 @@ from tkinter import ttk, messagebox, filedialog, scrolledtext
 import sys
 import os
 
-# 使用相对导入
-from ..tools import formatter, random_gen, diff_tool, converter, linter, unused_func_detector
+# 处理相对导入和直接运行的兼容性
+try:
+    # 尝试相对导入(作为模块运行时)
+    from ..tools import formatter, random_gen, diff_tool, converter, linter, unused_func_detector
+except ImportError:
+    # 如果相对导入失败,添加父目录到路径(直接运行时)
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+    from devkit_zero.tools import formatter, random_gen, diff_tool, converter, linter, unused_func_detector
 
 
 class DevKitZeroGUI:
