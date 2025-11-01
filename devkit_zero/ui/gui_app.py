@@ -7,17 +7,18 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog, scrolledtext
 import sys
 import os
+import re
 
 # 处理相对导入和直接运行的兼容性
 try:
     # 尝试相对导入(作为模块运行时)
-    from ..tools import formatter, random_gen, diff_tool, converter, linter, unused_func_detector, api_contract_diff, port_checker
+    from ..tools import formatter, random_gen, diff_tool, converter, linter, unused_func_detector, api_contract_diff, port_checker, regex_tester
+    from ..tools.Robot_checker import core_logic as robots_core_logic
 except ImportError:
     # 如果相对导入失败,添加父目录到路径(直接运行时)
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
-    from devkit_zero.tools import formatter, random_gen, diff_tool, converter, linter, unused_func_detector, api_contract_diff, port_checker
-# 使用相对导入
-# from ..tools import formatter, random_gen, diff_tool, converter, linter
+    from devkit_zero.tools import formatter, random_gen, diff_tool, converter, linter, unused_func_detector, api_contract_diff, port_checker, regex_tester
+    from devkit_zero.tools.Robot_checker import core_logic as robots_core_logic
 
 
 
@@ -27,8 +28,11 @@ class DevKitZeroGUI:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("DevKit-Zero - 零依赖开发者工具箱")
-        self.root.geometry("800x600")
+        self.root.geometry("900x700")
         self.root.resizable(True, True)
+        
+        # 创建工具实例
+        self.regex_tester = regex_tester.RegexTester()
         
         # 设置图标 (如果存在)
         try:
@@ -65,7 +69,9 @@ class DevKitZeroGUI:
             ("代码静态检查", "linter"),
             ("未使用函数检测", "unused_func"),
             ("端口检查", "port_checker"),
-            ("接口契约对比器", "api_diff")
+            ("接口契约对比器", "api_diff"),
+            ("正则表达式测试", "regex_tester"),
+            ("Robots检查器", "robots_checker")
         ]
         
         for i, (name, value) in enumerate(tools):
@@ -76,6 +82,7 @@ class DevKitZeroGUI:
         control_frame = ttk.LabelFrame(main_frame, text="控制面板", padding="10")
         control_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=(0, 10))
         control_frame.columnconfigure(0, weight=1)
+        control_frame.rowconfigure(0, weight=1)
         
         # 右侧结果面板
         result_frame = ttk.LabelFrame(main_frame, text="结果输出", padding="10")
@@ -83,12 +90,13 @@ class DevKitZeroGUI:
         result_frame.columnconfigure(0, weight=1)
         result_frame.rowconfigure(0, weight=1)
         
-        # 结果文本框
+        # 结果文本框（用于大部分工具）
         self.result_text = scrolledtext.ScrolledText(result_frame, wrap=tk.WORD, height=20)
         self.result_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
-        # 控制面板容器
+        # 控制面板和结果面板容器
         self.control_container = control_frame
+        self.result_container = result_frame
         
         # 初始化工具面板
         self.on_tool_change()
@@ -99,7 +107,21 @@ class DevKitZeroGUI:
         for widget in self.control_container.winfo_children():
             widget.destroy()
         
+        # 清除结果容器
+        for widget in self.result_container.winfo_children():
+            widget.destroy()
+        
         tool = self.tool_var.get()
+        
+        # 根据工具类型显示或隐藏默认结果文本框
+        if tool in ["regex_tester", "robots_checker"]:
+            # 这些工具使用自定义结果面板
+            if hasattr(self, 'result_text'):
+                self.result_text.grid_remove()
+        else:
+            # 其他工具使用默认结果文本框
+            if hasattr(self, 'result_text'):
+                self.result_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
         if tool == "formatter":
             self.setup_formatter_ui()
@@ -117,6 +139,10 @@ class DevKitZeroGUI:
             self.setup_port_checker_ui()
         elif tool == "api_diff":
             self.setup_api_diff_ui()
+        elif tool == "regex_tester":
+            self.setup_regex_tester_ui()
+        elif tool == "robots_checker":
+            self.setup_robots_checker_ui()
     
     def setup_formatter_ui(self):
         """设置代码格式化工具界面"""
@@ -888,6 +914,412 @@ class DevKitZeroGUI:
     }'''
         self.api_old_text.delete("1.0", "end"); self.api_old_text.insert("1.0", demo_v1)
         self.api_new_text.delete("1.0", "end"); self.api_new_text.insert("1.0", demo_v2)
+    
+    # ========== 正则表达式测试工具 ==========
+    def setup_regex_tester_ui(self):
+        """设置正则表达式测试工具界面"""
+        # 控制面板 - 正则相关控件
+        control_frame = ttk.Frame(self.control_container)
+        control_frame.pack(fill=tk.BOTH, expand=True)
+
+        # 常用模式选择
+        ttk.Label(control_frame, text="常用模式:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        self.pattern_var = tk.StringVar()
+        self.common_patterns_combo = ttk.Combobox(
+            control_frame,
+            textvariable=self.pattern_var,
+            values=list(self.regex_tester.get_common_patterns().keys()),
+            state="readonly",
+            width=30
+        )
+        self.common_patterns_combo.set("选择常用模式...")
+        self.common_patterns_combo.grid(row=0, column=1, sticky=tk.EW, pady=5, padx=(5, 0))
+        self.common_patterns_combo.bind('<<ComboboxSelected>>', self.on_pattern_selected)
+
+        # 自定义模式输入
+        ttk.Label(control_frame, text="自定义模式:").grid(row=1, column=0, sticky=tk.NW, pady=5)
+        self.pattern_entry = scrolledtext.ScrolledText(control_frame, width=40, height=3)
+        self.pattern_entry.grid(row=1, column=1, sticky=tk.EW, pady=5, padx=(5, 0))
+
+        # 选项框架
+        options_frame = ttk.LabelFrame(control_frame, text="选项", padding=5)
+        options_frame.grid(row=2, column=1, sticky=tk.EW, pady=5, padx=(5, 0))
+
+        # 正则标志
+        self.ignore_case_var = tk.BooleanVar()
+        ttk.Checkbutton(
+            options_frame,
+            text="忽略大小写 (re.IGNORECASE)",
+            variable=self.ignore_case_var
+        ).pack(anchor=tk.W)
+
+        self.multiline_var = tk.BooleanVar()
+        ttk.Checkbutton(
+            options_frame,
+            text="多行模式 (re.MULTILINE)",
+            variable=self.multiline_var
+        ).pack(anchor=tk.W)
+
+        self.dotall_var = tk.BooleanVar()
+        ttk.Checkbutton(
+            options_frame,
+            text="点匹配换行 (re.DOTALL)",
+            variable=self.dotall_var
+        ).pack(anchor=tk.W)
+
+        # 测试文本区域
+        ttk.Label(control_frame, text="测试文本:").grid(row=3, column=0, sticky=tk.NW, pady=5)
+        self.text_area = scrolledtext.ScrolledText(control_frame, width=40, height=10)
+        self.text_area.grid(row=3, column=1, sticky=tk.NSEW, pady=5, padx=(5, 0))
+
+        # 按钮区域
+        button_frame = ttk.Frame(control_frame)
+        button_frame.grid(row=4, column=0, columnspan=2, sticky=tk.EW, pady=10)
+
+        self.test_button = ttk.Button(
+            button_frame,
+            text="测试正则",
+            command=self.test_regex
+        )
+        self.test_button.pack(side=tk.LEFT, padx=(0, 10))
+
+        self.clear_button = ttk.Button(
+            button_frame,
+            text="清空所有",
+            command=self.clear_all_regex
+        )
+        self.clear_button.pack(side=tk.LEFT, padx=(0, 10))
+
+        self.copy_result_button = ttk.Button(
+            button_frame,
+            text="复制结果",
+            command=self.copy_regex_results
+        )
+        self.copy_result_button.pack(side=tk.LEFT)
+
+        # 配置权重
+        control_frame.columnconfigure(1, weight=1)
+        control_frame.rowconfigure(3, weight=1)
+
+        # 设置快捷键
+        self.text_area.bind('<Control-Return>', lambda e: self.test_regex())
+        self.pattern_entry.bind('<Control-Return>', lambda e: self.test_regex())
+
+        # 结果面板 - 正则测试结果
+        result_frame = ttk.Frame(self.result_container)
+        result_frame.pack(fill=tk.BOTH, expand=True)
+
+        # 匹配统计
+        stats_frame = ttk.Frame(result_frame)
+        stats_frame.pack(fill=tk.X, pady=(0, 10))
+        self.stats_label = ttk.Label(stats_frame, text="匹配结果: 0 个匹配", font=('Arial', 10, 'bold'))
+        self.stats_label.pack(side=tk.LEFT)
+        self.pattern_status_label = ttk.Label(stats_frame, text="模式状态: 未测试", foreground="gray")
+        self.pattern_status_label.pack(side=tk.RIGHT)
+
+        # 匹配详情
+        ttk.Label(result_frame, text="匹配详情:").pack(anchor=tk.W, pady=(0, 5))
+        self.matches_text = scrolledtext.ScrolledText(
+            result_frame,
+            width=60,
+            height=8,
+            state=tk.DISABLED
+        )
+        self.matches_text.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
+
+        # 替换结果显示
+        replace_frame = ttk.LabelFrame(result_frame, text="替换结果", padding=5)
+        replace_frame.pack(fill=tk.X)
+        self.replace_text = scrolledtext.ScrolledText(
+            replace_frame,
+            width=60,
+            height=4,
+            state=tk.DISABLED
+        )
+        self.replace_text.pack(fill=tk.BOTH, expand=True)
+
+    def on_pattern_selected(self, event):
+        """选择常用模式时的回调"""
+        pattern_name = self.pattern_var.get()
+        common_patterns = self.regex_tester.get_common_patterns()
+
+        if pattern_name in common_patterns:
+            self.pattern_entry.delete(1.0, tk.END)
+            self.pattern_entry.insert(1.0, common_patterns[pattern_name])
+
+    def test_regex(self):
+        """测试正则表达式"""
+        pattern = self.pattern_entry.get(1.0, tk.END).strip()
+        text = self.text_area.get(1.0, tk.END)
+
+        if not pattern:
+            messagebox.showerror("错误", "请输入正则表达式模式")
+            return
+
+        if not text.strip():
+            messagebox.showwarning("警告", "请输入测试文本")
+            return
+
+        # 计算标志
+        flags = 0
+        if self.ignore_case_var.get():
+            flags |= re.IGNORECASE
+        if self.multiline_var.get():
+            flags |= re.MULTILINE
+        if self.dotall_var.get():
+            flags |= re.DOTALL
+
+        # 测试正则
+        result = self.regex_tester.test_pattern(pattern, text, flags)
+
+        # 显示结果
+        self.display_regex_results(result)
+
+    def display_regex_results(self, result):
+        """显示匹配结果"""
+        # 更新统计
+        if result['success']:
+            self.stats_label.config(
+                text=f"匹配结果: {result['match_count']} 个匹配",
+                foreground="green"
+            )
+            self.pattern_status_label.config(
+                text="模式状态: 有效",
+                foreground="green"
+            )
+        else:
+            self.stats_label.config(
+                text=f"错误: {result['error']}",
+                foreground="red"
+            )
+            self.pattern_status_label.config(
+                text="模式状态: 无效",
+                foreground="red"
+            )
+
+        # 更新匹配详情
+        self.matches_text.config(state=tk.NORMAL)
+        self.matches_text.delete(1.0, tk.END)
+
+        if result['success'] and result['match_count'] > 0:
+            for i, match in enumerate(result['matches'], 1):
+                self.matches_text.insert(tk.END, f"匹配 {i}:\n")
+                self.matches_text.insert(tk.END, f"  位置: {match['start']}-{match['end']}\n")
+                self.matches_text.insert(tk.END, f"  值: {match['group']}\n")
+
+                if match['groups']:
+                    self.matches_text.insert(tk.END, "  分组:\n")
+                    for j, group in enumerate(match['groups'], 1):
+                        self.matches_text.insert(tk.END, f"    分组 {j}: {group}\n")
+                self.matches_text.insert(tk.END, "\n")
+        elif result['success']:
+            self.matches_text.insert(tk.END, "未找到匹配。")
+        else:
+            self.matches_text.insert(tk.END, f"模式错误: {result['error']}")
+
+        self.matches_text.config(state=tk.DISABLED)
+
+        # 更新替换文本
+        self.replace_text.config(state=tk.NORMAL)
+        self.replace_text.delete(1.0, tk.END)
+        self.replace_text.insert(tk.END, result['replaced_text'])
+        self.replace_text.config(state=tk.DISABLED)
+
+    def clear_all_regex(self):
+        """清空所有输入和结果"""
+        self.pattern_entry.delete(1.0, tk.END)
+        self.text_area.delete(1.0, tk.END)
+        self.matches_text.config(state=tk.NORMAL)
+        self.matches_text.delete(1.0, tk.END)
+        self.matches_text.config(state=tk.DISABLED)
+        self.replace_text.config(state=tk.NORMAL)
+        self.replace_text.delete(1.0, tk.END)
+        self.replace_text.config(state=tk.DISABLED)
+        self.stats_label.config(text="匹配结果: 0 个匹配", foreground="black")
+        self.pattern_status_label.config(text="模式状态: 未测试", foreground="gray")
+        self.common_patterns_combo.set("选择常用模式...")
+        self.ignore_case_var.set(False)
+        self.multiline_var.set(False)
+        self.dotall_var.set(False)
+
+    def copy_regex_results(self):
+        """复制正则测试结果到剪贴板"""
+        self.root.clipboard_clear()
+        results = self.matches_text.get(1.0, tk.END).strip()
+        self.root.clipboard_append(results)
+        messagebox.showinfo("已复制", "结果已复制到剪贴板")
+
+    # ========== Robots检查器 ==========
+    def setup_robots_checker_ui(self):
+        """设置Robots检查器界面"""
+        # 控制面板 - robots检查器相关控件
+        control_frame = ttk.Frame(self.control_container)
+        control_frame.pack(fill=tk.BOTH, expand=True)
+
+        # URL输入
+        ttk.Label(control_frame, text="网站URL:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        self.robots_url_entry = ttk.Entry(control_frame, width=40)
+        self.robots_url_entry.grid(row=0, column=1, sticky=tk.EW, pady=5, padx=(5, 0))
+        self.robots_url_entry.insert(0, "https://")  # 默认前缀
+
+        # 选项框架
+        options_frame = ttk.LabelFrame(control_frame, text="选项", padding=5)
+        options_frame.grid(row=1, column=0, columnspan=2, sticky=tk.EW, pady=5)
+
+        # 超时设置
+        ttk.Label(options_frame, text="超时(秒):").grid(row=0, column=0, sticky=tk.W, padx=5)
+        self.robots_timeout_var = tk.StringVar(value="10")
+        ttk.Entry(options_frame, textvariable=self.robots_timeout_var, width=10).grid(row=0, column=1, sticky=tk.W, padx=5)
+
+        # 原始输出选项
+        self.robots_raw_var = tk.BooleanVar()
+        ttk.Checkbutton(
+            options_frame,
+            text="显示原始robots.txt内容",
+            variable=self.robots_raw_var
+        ).grid(row=0, column=2, sticky=tk.W, padx=10)
+
+        # 按钮区域
+        button_frame = ttk.Frame(control_frame)
+        button_frame.grid(row=2, column=0, columnspan=2, sticky=tk.EW, pady=10)
+
+        self.check_robots_button = ttk.Button(
+            button_frame,
+            text="检查Robots规则",
+            command=self.check_robots
+        )
+        self.check_robots_button.pack(side=tk.LEFT, padx=(0, 10))
+
+        self.copy_robots_button = ttk.Button(
+            button_frame,
+            text="复制结果",
+            command=self.copy_robots_results
+        )
+        self.copy_robots_button.pack(side=tk.LEFT)
+
+        # 配置权重
+        control_frame.columnconfigure(1, weight=1)
+        options_frame.columnconfigure(2, weight=1)
+
+        # 设置快捷键: Ctrl+Enter检查
+        self.robots_url_entry.bind('<Control-Return>', lambda e: self.check_robots())
+
+        # 结果面板 - robots检查器结果
+        result_frame = ttk.Frame(self.result_container)
+        result_frame.pack(fill=tk.BOTH, expand=True)
+
+        # 状态栏
+        self.robots_status_label = ttk.Label(result_frame, text="状态: 就绪", font=('Arial', 10, 'bold'))
+        self.robots_status_label.pack(anchor=tk.W, pady=(0, 5))
+
+        # Robots URL显示
+        self.robots_url_label = ttk.Label(result_frame, text="", foreground="blue")
+        self.robots_url_label.pack(anchor=tk.W, pady=(0, 10))
+
+        # 结果笔记本(标签页)
+        notebook = ttk.Notebook(result_frame)
+        notebook.pack(fill=tk.BOTH, expand=True)
+
+        # 解析规则标签页
+        self.robots_parsed_text = scrolledtext.ScrolledText(
+            notebook,
+            width=60,
+            height=15,
+            state=tk.DISABLED
+        )
+        notebook.add(self.robots_parsed_text, text="解析规则")
+
+        # 原始内容标签页
+        self.robots_raw_text = scrolledtext.ScrolledText(
+            notebook,
+            width=60,
+            height=15,
+            state=tk.DISABLED
+        )
+        notebook.add(self.robots_raw_text, text="原始内容")
+
+    def check_robots(self):
+        """检查给定URL的robots.txt"""
+        url = self.robots_url_entry.get().strip()
+
+        if not url:
+            messagebox.showerror("错误", "请输入网站URL")
+            return
+
+        try:
+            # 获取超时值
+            timeout = int(self.robots_timeout_var.get())
+
+            # 更新状态
+            self.robots_status_label.config(text="状态: 检查中...", foreground="orange")
+            self.root.update()  # 强制UI更新
+
+            # 调用核心逻辑
+            result = robots_core_logic(url, timeout=timeout)
+
+            # 更新状态
+            self.robots_status_label.config(
+                text=f"状态: {result['message']}",
+                foreground="green" if result['success'] else "red"
+            )
+            self.robots_url_label.config(text=result['url'])
+
+            # 显示原始内容
+            self.robots_raw_text.config(state=tk.NORMAL)
+            self.robots_raw_text.delete(1.0, tk.END)
+            self.robots_raw_text.insert(1.0, result['content'] or "无可用内容")
+            self.robots_raw_text.config(state=tk.DISABLED)
+
+            # 显示解析规则(如果成功)
+            self.robots_parsed_text.config(state=tk.NORMAL)
+            self.robots_parsed_text.delete(1.0, tk.END)
+
+            if result['success'] and result['rules']:
+                rules = result['rules']
+
+                if rules['host']:
+                    self.robots_parsed_text.insert(tk.END, f"主机: {rules['host']}\n\n")
+
+                if rules['crawl_delay']:
+                    self.robots_parsed_text.insert(tk.END, f"抓取延迟: {rules['crawl_delay']} 秒\n\n")
+
+                if rules['sitemaps']:
+                    self.robots_parsed_text.insert(tk.END, "站点地图:\n")
+                    for sitemap in rules['sitemaps']:
+                        self.robots_parsed_text.insert(tk.END, f"- {sitemap}\n")
+                    self.robots_parsed_text.insert(tk.END, "\n")
+
+                self.robots_parsed_text.insert(tk.END, "用户代理规则:\n")
+                for agent, agent_rules in rules['user_agents'].items():
+                    self.robots_parsed_text.insert(tk.END, f"\n用户代理: {agent}\n")
+
+                    if agent_rules['allow']:
+                        self.robots_parsed_text.insert(tk.END, "  允许:\n")
+                        for path in agent_rules['allow']:
+                            self.robots_parsed_text.insert(tk.END, f"    - {path}\n")
+
+                    if agent_rules['disallow']:
+                        self.robots_parsed_text.insert(tk.END, "  禁止:\n")
+                        for path in agent_rules['disallow']:
+                            self.robots_parsed_text.insert(tk.END, f"    - {path}\n")
+            else:
+                self.robots_parsed_text.insert(tk.END, "未找到有效的robots规则或无法解析内容。")
+
+            self.robots_parsed_text.config(state=tk.DISABLED)
+
+        except ValueError as e:
+            self.robots_status_label.config(text=f"状态: 错误 - {str(e)}", foreground="red")
+            messagebox.showerror("错误", str(e))
+        except Exception as e:
+            self.robots_status_label.config(text=f"状态: 错误 - {str(e)}", foreground="red")
+            messagebox.showerror("错误", f"检查robots规则失败: {str(e)}")
+
+    def copy_robots_results(self):
+        """复制robots检查结果到剪贴板"""
+        self.root.clipboard_clear()
+        parsed_content = self.robots_parsed_text.get(1.0, tk.END).strip()
+        self.root.clipboard_append(parsed_content)
+        messagebox.showinfo("已复制", "结果已复制到剪贴板")
         
 
 if __name__ == "__main__":
