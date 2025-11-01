@@ -2,4 +2,6 @@
 
 __version__ = "0.1.0"
 __author__ = "DevKit-Zero Team"
-__email__ = "your-team@example.com"
+__email__ = "<EMAIL>"
+__description__ = "A comprehensive developer toolkit with various utilities"
+
