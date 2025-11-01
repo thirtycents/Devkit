@@ -210,15 +210,15 @@ class DevKitZeroGUI:
         ttk.Label(self.control_container, text="从格式:").grid(row=0, column=0, sticky=tk.W, pady=2)
         self.convert_from_var = tk.StringVar(value="json")
         from_combo = ttk.Combobox(self.control_container, textvariable=self.convert_from_var,
-                                 values=["json", "csv"], state="readonly")
+                                  values=["json", "csv"], state="readonly")
         from_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=2)
-        
+
         ttk.Label(self.control_container, text="到格式:").grid(row=1, column=0, sticky=tk.W, pady=2)
         self.convert_to_var = tk.StringVar(value="csv")
         to_combo = ttk.Combobox(self.control_container, textvariable=self.convert_to_var,
-                               values=["json", "csv"], state="readonly")
+                                values=["json", "csv"], state="readonly")
         to_combo.grid(row=1, column=1, sticky=(tk.W, tk.E), pady=2)
-        
+
         # 输入数据
         ttk.Label(self.control_container, text="输入数据:").grid(row=2, column=0, sticky=tk.W, pady=(10, 2))
         self.convert_input_text = tk.Text(self.control_container, height=12, wrap=tk.WORD)
@@ -319,40 +319,60 @@ class DevKitZeroGUI:
         # 清除现有参数控件
         for widget in self.random_params_frame.winfo_children():
             widget.destroy()
-        
+
         gen_type = self.random_type_var.get()
-        
+
         if gen_type == "string":
             ttk.Label(self.random_params_frame, text="长度:").grid(row=0, column=0, sticky=tk.W, pady=2)
             self.string_length_var = tk.StringVar(value="8")
-            ttk.Entry(self.random_params_frame, textvariable=self.string_length_var, width=10).grid(row=0, column=1, sticky=tk.W, pady=2)
-            
+            ttk.Entry(self.random_params_frame, textvariable=self.string_length_var, width=10).grid(row=0, column=1,
+                                                                                                    sticky=tk.W, pady=2)
+
             self.string_numbers_var = tk.BooleanVar(value=True)
             self.string_uppercase_var = tk.BooleanVar(value=True)
             self.string_lowercase_var = tk.BooleanVar(value=True)
             self.string_symbols_var = tk.BooleanVar(value=False)
             
-            ttk.Checkbutton(self.random_params_frame, text="包含数字", variable=self.string_numbers_var).grid(row=1, column=0, sticky=tk.W, pady=1)
-            ttk.Checkbutton(self.random_params_frame, text="包含大写字母", variable=self.string_uppercase_var).grid(row=2, column=0, sticky=tk.W, pady=1)
-            ttk.Checkbutton(self.random_params_frame, text="包含小写字母", variable=self.string_lowercase_var).grid(row=3, column=0, sticky=tk.W, pady=1)
-            ttk.Checkbutton(self.random_params_frame, text="包含特殊符号", variable=self.string_symbols_var).grid(row=4, column=0, sticky=tk.W, pady=1)
             
+            ttk.Checkbutton(self.random_params_frame, text="包含数字", variable=self.string_numbers_var).grid(row=1,
+                                                                                                          column=0,
+                                                                                                          sticky=tk.W,
+                                                                                                          pady=1)
+            ttk.Checkbutton(self.random_params_frame, text="包含大写字母", variable=self.string_uppercase_var).grid(row=2,
+                                                                                                              column=0,
+                                                                                                              sticky=tk.W,
+                                                                                                              pady=1)
+            ttk.Checkbutton(self.random_params_frame, text="包含小写字母", variable=self.string_lowercase_var).grid(row=3,
+                                                                                                              column=0,
+                                                                                                              sticky=tk.W,
+                                                                                                              pady=1)
+            ttk.Checkbutton(self.random_params_frame, text="包含特殊符号", variable=self.string_symbols_var).grid(row=4,
+                                                                                                            column=0,
+                                                                                                            sticky=tk.W,
+                                                                                                            pady=1)
+
         elif gen_type == "password":
             ttk.Label(self.random_params_frame, text="长度:").grid(row=0, column=0, sticky=tk.W, pady=2)
             self.password_length_var = tk.StringVar(value="16")
-            ttk.Entry(self.random_params_frame, textvariable=self.password_length_var, width=10).grid(row=0, column=1, sticky=tk.W, pady=2)
-            
+            ttk.Entry(self.random_params_frame, textvariable=self.password_length_var, width=10).grid(row=0, column=1,
+                                                                                                      sticky=tk.W,
+                                                                                                      pady=2)
+
         elif gen_type == "number":
             ttk.Label(self.random_params_frame, text="最小值:").grid(row=0, column=0, sticky=tk.W, pady=2)
             self.number_min_var = tk.StringVar(value="0")
-            ttk.Entry(self.random_params_frame, textvariable=self.number_min_var, width=10).grid(row=0, column=1, sticky=tk.W, pady=2)
-            
+            ttk.Entry(self.random_params_frame, textvariable=self.number_min_var, width=10).grid(row=0, column=1,
+                                                                                                 sticky=tk.W, pady=2)
+
             ttk.Label(self.random_params_frame, text="最大值:").grid(row=1, column=0, sticky=tk.W, pady=2)
             self.number_max_var = tk.StringVar(value="100")
-            ttk.Entry(self.random_params_frame, textvariable=self.number_max_var, width=10).grid(row=1, column=1, sticky=tk.W, pady=2)
-            
+            ttk.Entry(self.random_params_frame, textvariable=self.number_max_var, width=10).grid(row=1, column=1,
+                                                                                                 sticky=tk.W, pady=2)
+
             self.number_float_var = tk.BooleanVar(value=False)
-            ttk.Checkbutton(self.random_params_frame, text="浮点数", variable=self.number_float_var).grid(row=2, column=0, sticky=tk.W, pady=1)
+            ttk.Checkbutton(self.random_params_frame, text="浮点数", variable=self.number_float_var).grid(row=2, column=0,
+                                                                                                       sticky=tk.W,
+                                                                                                       pady=1)
     
     def select_format_file(self):
         """选择格式化文件"""
@@ -372,6 +392,8 @@ class DevKitZeroGUI:
         if filename:
             self.lint_file_var.set(filename)
     
+
+
     def display_result(self, result: str):
         """显示结果"""
         self.result_text.delete(1.0, tk.END)

@@ -1,7 +1,32 @@
 """
-DevKit-Zero 包初始化文件
+DevKit-Zero: 零依赖开发者工具箱
 
-这个文件定义了包的公共API接口。
+这是一个轻量级、零依赖、功能强大的开发者工具箱，提供统一的 API 接口
+和命令行界面，解决开发者在代码处理、文本操作和环境辅助方面的高频需求。
+
+基本用法:
+    # 作为库使用
+    from devkit_zero import formatter, random_gen, diff_tool
+
+    # 格式化代码
+    result = formatter.format_code("def hello(): print('hi')", "python")
+
+    # 生成随机数据
+    uuid = random_gen.generate_uuid()
+    password = random_gen.generate_secure_password()
+
+    # 对比文本差异
+    diff = diff_tool.compare_texts("text1", "text2")
+
+命令行用法:
+    # 直接运行
+    devkit-zero format --input "code" --language python
+    devkit-zero random uuid
+    devkit-zero diff --text1 "hello" --text2 "world"
+
+    # 或使用简短别名
+    devkit format --help
+    devkit random --help
 """
 
 __version__ = "0.1.0"
@@ -17,7 +42,8 @@ from .tools import (
     regex_tester,
     batch_process,
     markdown_preview,
-    port_checker
+    port_checker,
+    
 )
 
 # 导入核心类和函数（便于高级用户使用）

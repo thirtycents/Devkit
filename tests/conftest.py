@@ -6,15 +6,29 @@ Pytest配置文件
 
 import pytest
 import sys
-from pathlib import Path
+import os
 
-# 添加项目根目录到Python路径
-project_root = Path(__file__).parent
-sys.path.insert(0, str(project_root))
+# 添加项目根目录到 Python 路径
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
-# TODO: 添加全局测试fixture
-#
-# @pytest.fixture
-# def sample_data():
-#     """提供测试数据"""
-#     return {"test": "data"}
+@pytest.fixture
+def sample_python_code():
+    """示例 Python 代码"""
+    return """def hello_world():
+print("Hello, World!")
+if True:
+print("This is true")
+return "done"
+"""
+
+@pytest.fixture
+def sample_javascript_code():
+    """示例 JavaScript 代码"""
+    return """function helloWorld() {
+console.log("Hello, World!");
+if (true) {
+console.log("This is true");
+}
+return "done";
+}
+"""
