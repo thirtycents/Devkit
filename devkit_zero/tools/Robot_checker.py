@@ -249,6 +249,9 @@ def register_parser(subparsers) -> None:
         action='store_true',
         help='Display raw robots.txt content without parsing'
     )
+    
+    # 设置命令处理函数
+    parser.set_defaults(func=main_function)
 
 def main():
     """Standalone execution entry point"""

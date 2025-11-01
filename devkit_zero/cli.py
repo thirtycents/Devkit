@@ -8,7 +8,7 @@ import argparse
 import sys
 from typing import Optional
 
-from .tools import formatter, random_gen, diff_tool, converter, linter, regex_tester, batch_process, markdown_preview, port_checker, unused_func_detector, api_contract_diff
+from .tools import formatter, random_gen, converter, linter, port_checker, unused_func_detector, api_contract_diff, Robot_checker, regex_tester
 from .__version__ import __version__, __description__
 
 
@@ -46,15 +46,16 @@ def create_parser() -> argparse.ArgumentParser:
     # 注册所有工具的子命令
     formatter.register_parser(subparsers)
     random_gen.register_parser(subparsers)
-    diff_tool.register_parser(subparsers)
+    # diff_tool 只支持 GUI (未实现)
     converter.register_parser(subparsers)
     linter.register_parser(subparsers)
     regex_tester.register_parser(subparsers)
-    batch_process.register_parser(subparsers)
-    markdown_preview.register_parser(subparsers)
+    # batch_process 只支持 GUI
+    # markdown_preview 只支持 GUI
     port_checker.register_parser(subparsers)
     unused_func_detector.register_parser(subparsers)
     api_contract_diff.register_parser(subparsers)
+    Robot_checker.register_parser(subparsers)
     
     return parser
 

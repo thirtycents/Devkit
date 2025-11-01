@@ -28,7 +28,7 @@ class DevKitZeroGUI:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("DevKit-Zero - 零依赖开发者工具箱")
-        self.root.geometry("900x700")
+        self.root.geometry("1100x600")
         self.root.resizable(True, True)
         
         # 创建工具实例
@@ -103,25 +103,20 @@ class DevKitZeroGUI:
     
     def on_tool_change(self):
         """工具选择改变时的处理"""
-        # 清除现有控件
+        # 清除控制面板现有控件
         for widget in self.control_container.winfo_children():
-            widget.destroy()
-        
-        # 清除结果容器
-        for widget in self.result_container.winfo_children():
             widget.destroy()
         
         tool = self.tool_var.get()
         
-        # 根据工具类型显示或隐藏默认结果文本框
-        if tool in ["regex_tester", "robots_checker"]:
-            # 这些工具使用自定义结果面板
-            if hasattr(self, 'result_text'):
-                self.result_text.grid_remove()
-        else:
-            # 其他工具使用默认结果文本框
-            if hasattr(self, 'result_text'):
-                self.result_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+        # 清除结果容器并根据工具类型设置结果面板
+        for widget in self.result_container.winfo_children():
+            widget.destroy()
+        
+        # 为使用默认结果文本框的工具重新创建结果文本框
+        if tool not in ["regex_tester", "robots_checker"]:
+            self.result_text = scrolledtext.ScrolledText(self.result_container, wrap=tk.WORD, height=20)
+            self.result_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
         
         if tool == "formatter":
             self.setup_formatter_ui()
