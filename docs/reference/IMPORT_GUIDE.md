@@ -22,32 +22,62 @@ python gui_app.py
 
 ### ✅ 正确的运行方式
 
-#### 方式1: 作为模块运行(推荐)
+#### 方式1: GUI 界面运行(推荐)
 ```powershell
 # 从项目根目录运行
 cd D:\Cityu\SEMA\CS5351\Project\devkit
 
+# 运行 GUI 主程序
+python -m devkit_zero.gui_main
+
+# 或者直接运行 GUI 应用
 python -m devkit_zero.ui.gui_app
 ```
 
-#### 方式2: 使用CLI入口
+#### 方式2: CLI 命令行运行
 ```powershell
-# 通过安装的命令
-pip install -e .
+# 查看所有可用命令
+python -m devkit_zero.cli --help
 
-# 然后使用
-devkit-zero-gui
-
-# 或运行CLI
-devkit-zero --help
+# 使用具体工具
+python -m devkit_zero.cli format --file test.py
+python -m devkit_zero.cli random uuid
+python -m devkit_zero.cli regex "\d+" "Hello 123 World"
+python -m devkit_zero.cli robots_checker https://google.com
 ```
 
-#### 方式3: 从Python脚本运行
-```python
-# 在任何脚本中导入并运行
-from devkit_zero.ui.gui_app import DevKitZeroGUI
+#### 方式3: 安装后使用(需要先安装)
+```powershell
+# 安装开发版本
+pip install -e .
 
-app = DevKitZeroGUI()
+# GUI 入口
+devkit-zero-gui
+
+# CLI 入口
+devkit-zero --help
+devkit-zero format --help
+```
+
+#### 方式4: 作为库导入使用
+```python
+# 在任何 Python 脚本中导入并使用
+from devkit_zero.tools import formatter, regex_tester, Robot_checker
+
+# 格式化代码
+code = "def test():pass"
+formatted, error = formatter.format_code(code, 'python', ignore_errors=True)
+print(formatted)
+
+# 测试正则表达式
+tester = regex_tester.RegexTester()
+result = tester.test_pattern(r'\d+', 'Hello 123 World')
+print(result)
+
+# 检查 robots.txt
+from devkit_zero.tools.Robot_checker import core_logic
+result = robots_core_logic('https://google.com')
+print(result)
 app.run()
 ```
 

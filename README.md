@@ -40,7 +40,44 @@ pip install -r requirements-dev.txt
 pip install -e .
 ```
 
-### 4. 运行测试
+### 4. 运行项目
+
+#### 🖥️ GUI 界面方式
+```bash
+# Windows: 双击运行
+start_gui.bat
+
+# 或使用命令行
+python -m devkit_zero.gui_main
+```
+
+#### ⌨️ CLI 命令行方式
+```bash
+# 查看所有可用命令
+python -m devkit_zero.cli --help
+
+# 使用具体工具
+python -m devkit_zero.cli format --file test.py
+python -m devkit_zero.cli random uuid
+python -m devkit_zero.cli regex "\d+" "Hello 123"
+python -m devkit_zero.cli robots_checker https://google.com
+```
+
+#### 📦 作为库使用
+```python
+from devkit_zero.tools import formatter, regex_tester
+
+# 格式化代码
+code, error = formatter.format_code("def test():pass", "python")
+print(code)
+
+# 测试正则表达式
+tester = regex_tester.RegexTester()
+result = tester.test_pattern(r'\d+', 'Hello 123')
+print(result)
+```
+
+### 5. 运行测试
 ```bash
 pytest
 ```

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 DevKit-Zero GUI 主程序入口
 """

@@ -43,7 +43,9 @@ from .tools import (
     batch_process,
     markdown_preview,
     port_checker,
-    
+    unused_func_detector,
+    api_contract_diff,
+    Robot_checker,
 )
 
 # 导入核心类和函数（便于高级用户使用）
@@ -66,6 +68,9 @@ __all__ = [
     'batch_process',
     'markdown_preview',
     'port_checker',
+    'unused_func_detector',
+    'api_contract_diff',
+    'Robot_checker',
     
     # 核心类
     'DevKitCore',
@@ -80,15 +85,18 @@ def get_version():
 def get_available_tools():
     """获取可用工具列表"""
     return [
-        'formatter',      # 代码格式化
-        'random_gen',     # 随机数据生成
-        'diff_tool',      # 文本差异对比
-        'converter',      # 数据格式转换
-        'linter',         # 代码静态检查
-        'regex_tester',   # 正则表达式测试
-        'batch_process',  # 批量文件处理
-        'markdown_preview', # Markdown 预览
-        'port_checker',   # 端口检查
+        'formatter',           # 代码格式化
+        'random_gen',          # 随机数据生成
+        'diff_tool',           # 文本差异对比
+        'converter',           # 数据格式转换
+        'linter',              # 代码静态检查
+        'regex_tester',        # 正则表达式测试
+        'batch_process',       # 批量文件处理
+        'markdown_preview',    # Markdown 预览
+        'port_checker',        # 端口检查
+        'unused_func_detector', # 未使用函数检测
+        'api_contract_diff',   # API 契约对比
+        'Robot_checker',       # Robots.txt 检查器
     ]
 
 
