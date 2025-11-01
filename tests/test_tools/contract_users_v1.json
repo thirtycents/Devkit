@@ -1,0 +1,63 @@
+{
+  "apis": [
+    {
+      "name": "GetUser",
+      "method": "GET",
+      "path": "/users/{id}",
+      "params": [
+        {
+          "in": "path",
+          "name": "id",
+          "type": "string",
+          "required": true
+        }
+      ],
+      "responses": {
+        "200": {
+          "type": "object",
+          "required": [
+            "id"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "ListUsers",
+      "method": "GET",
+      "path": "/users",
+      "query": [
+        {
+          "name": "active",
+          "type": "boolean",
+          "required": false
+        }
+      ],
+      "responses": {
+        "200": {
+          "type": "object",
+          "properties": {
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

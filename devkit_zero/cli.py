@@ -8,7 +8,7 @@ import argparse
 import sys
 from typing import Optional
 
-from .tools import formatter, random_gen, diff_tool, converter, linter, regex_tester, batch_process, markdown_preview, port_checker, unused_func_detector
+from .tools import formatter, random_gen, diff_tool, converter, linter, regex_tester, batch_process, markdown_preview, port_checker, unused_func_detector, api_contract_diff
 from .__version__ import __version__, __description__
 
 
@@ -54,6 +54,7 @@ def create_parser() -> argparse.ArgumentParser:
     markdown_preview.register_parser(subparsers)
     port_checker.register_parser(subparsers)
     unused_func_detector.register_parser(subparsers)
+    api_contract_diff.register_parser(subparsers)
     
     return parser
 

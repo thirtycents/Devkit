@@ -19,7 +19,14 @@ def main(argv: Optional[list] = None) -> int:
             print("在某些 Linux 发行版中，您可能需要安装 python3-tkinter 包。", file=sys.stderr)
             return 1
         
-        from .ui.gui_app import DevKitZeroGUI
+        # 支持两种运行方式：作为包运行（相对导入）和直接运行文件（无父包）
+        try:
+            from .ui.gui_app import DevKitZeroGUI
+        except Exception:
+            # 当使用 `python devkit_zero/gui_main.py` 直接运行时，会出现
+            # "attempted relative import with no known parent package"。
+            # 在这种情况下尝试使用绝对导入作为回退。
+            from devkit_zero.ui.gui_app import DevKitZeroGUI
         
         app = DevKitZeroGUI()
         app.run()
