@@ -28,7 +28,7 @@ class DevKitZeroGUI:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("DevKit-Zero - 零依赖开发者工具箱")
-        self.root.geometry("1100x600")
+        self.root.geometry("1100x900")
         self.root.resizable(True, True)
         
         # 创建工具实例
