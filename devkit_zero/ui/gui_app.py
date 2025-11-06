@@ -42,27 +42,27 @@ def import_file_tools():
             sys.path.insert(0, path)
 
     # 尝试不同的导入方式
-    try:
+    
         # 方式1: 直接从tools模块导入
-        from tools.batch_process import BatchFileProcessor
-        from tools.FormatDetector import FormatDetector
-        return BatchFileProcessor, FormatDetector
-    except ImportError:
-        try:
-            # 方式2: 从当前目录的tools子文件夹导入
-            sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'tools'))
-            from batch_process import BatchFileProcessor
-            from FormatDetector import FormatDetector
-            return BatchFileProcessor, FormatDetector
-        except ImportError:
-            try:
-                # 方式3: 直接导入
-                from batch_process import BatchFileProcessor
-                from FormatDetector import FormatDetector
-                return BatchFileProcessor, FormatDetector
-            except ImportError as e:
-                print(f"文件工具导入失败: {e}")
-                return None, None
+    from tools.batch_process import BatchFileProcessor
+    from tools.FormatDetector import FormatDetector
+    return BatchFileProcessor, FormatDetector
+    # except ImportError:
+    #     try:
+    #         # 方式2: 从当前目录的tools子文件夹导入
+    #         sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'tools'))
+    #         from batch_process import BatchFileProcessor
+    #         from FormatDetector import FormatDetector
+    #         return BatchFileProcessor, FormatDetector
+    #     except ImportError:
+    #         try:
+    #             # 方式3: 直接导入
+    #             from batch_process import BatchFileProcessor
+    #             from FormatDetector import FormatDetector
+    #             return BatchFileProcessor, FormatDetector
+    #         except ImportError as e:
+    #             print(f"文件工具导入失败: {e}")
+    #             return None, None
 
 
 class PlaceholderEntry(ttk.Entry):
@@ -107,7 +107,7 @@ class DevKitZeroGUI:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("DevKit-Zero - 零依赖开发者工具箱")
-        self.root.geometry("1100x600")
+        self.root.geometry("1100x650")
         self.root.resizable(True, True)
 
         # 创建工具实例
