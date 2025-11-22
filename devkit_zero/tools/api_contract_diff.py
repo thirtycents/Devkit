@@ -2,41 +2,41 @@
 from __future__ import annotations
 
 """
-接口契约对比器 (API Contract Diff & Compatibility Check)
+API Contract Diff & Compatibility Check
 
-- 支持两种输入：
-  1) “简化契约 JSON”：{ "apis": [ {method, path, params/query/headers, request, responses}, ... ] }
-  2) OpenAPI/Swagger JSON：自动识别并转换为上面的简化结构再对比
+- Supports two types of input:
+  1) "Simplified Contract JSON": { "apis": [ {method, path, params/query/headers, request, responses}, ... ] }
+  2) OpenAPI/Swagger JSON: Automatically identified and converted to the simplified structure above for comparison
 
-- 兼容性规则（简化且保守）：
-  * 端点：新增 -> 非破坏；删除 -> 破坏
-  * 参数/请求体字段：
-      - 新增必填 -> 破坏；新增可选 -> 非破坏；删除 -> 破坏
-      - required False->True -> 破坏；True->False -> 非破坏
-      - 类型变化 -> 破坏（唯一“放宽”例外：请求/参数里 integer->number 视为非破坏；响应里仍视为破坏）
-  * 响应体字段：删除 -> 破坏；新增 -> 非破坏；类型变化 -> 破坏
+- Compatibility Rules (Simplified and Conservative):
+  * Endpoints: Added -> Non-breaking; Removed -> Breaking
+  * Parameters/Request Body Fields:
+      - Added required -> Breaking; Added optional -> Non-breaking; Removed -> Breaking
+      - required False->True -> Breaking; True->False -> Non-breaking
+      - Type change -> Breaking (Only "relaxation" exception: integer->number in request/params is considered non-breaking; still breaking in response)
+  * Response Body Fields: Removed -> Breaking; Added -> Non-breaking; Type change -> Breaking
 """
 
 import json
 from typing import Dict, Any, List, Optional
 
 
-# ---------- 基础IO ----------
+# ---------- Basic IO ----------
 
 def load_json_file(path: str) -> Dict[str, Any]:
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
 
-# ---------- OpenAPI 识别与转换 ----------
+# ---------- OpenAPI Identification & Conversion ----------
 
 def _is_openapi_doc(data: dict) -> bool:
-    """非常宽松的判定：有 paths 即认为是 OpenAPI 风格 JSON。"""
+    """Very loose check: if it has 'paths', consider it OpenAPI style JSON."""
     return isinstance(data, dict) and "paths" in data
 
 
 def _resolve_ref(root: dict, ref: str) -> dict:
-    """解析本地 $ref（形如 #/components/...）。找不到则返回 {}。"""
+    """Resolve local $ref (e.g. #/components/...). Return {} if not found."""
     if not isinstance(ref, str) or not ref.startswith("#/"):
         return {}
     node = root
@@ -49,8 +49,8 @@ def _resolve_ref(root: dict, ref: str) -> dict:
 
 def _oas_schema_to_simple(root: dict, schema: dict) -> dict:
     """
-    将 OpenAPI schema 转为“简化契约”的 schema（仅保留 type/required/properties/items）。
-    处理：$ref、allOf（浅合并）/ object / array / 原子类型
+    Convert OpenAPI schema to "Simplified Contract" schema (keep only type/required/properties/items).
+    Handle: $ref, allOf (shallow merge) / object / array / atomic types
     """
     if not isinstance(schema, dict):
         return {}
@@ -59,7 +59,7 @@ def _oas_schema_to_simple(root: dict, schema: dict) -> dict:
     if "$ref" in schema:
         schema = _resolve_ref(root, schema["$ref"])
 
-    # allOf -> 浅合并为 object
+    # allOf -> shallow merge as object
     if "allOf" in schema and isinstance(schema["allOf"], list):
         merged = {"type": "object", "properties": {}, "required": []}
         for part in schema["allOf"]:
@@ -92,19 +92,19 @@ def _oas_schema_to_simple(root: dict, schema: dict) -> dict:
         items = schema.get("items", {})
         return {"type": "array", "items": _oas_schema_to_simple(root, items)}
 
-    # 原子类型
+    # atomic types
     if typ in ("string", "number", "integer", "boolean"):
         return {"type": typ}
 
-    # 兜底：当作 object
+    # fallback: treat as object
     return {"type": "object"}
 
 
 def openapi_to_simple(oas: dict) -> dict:
-    """OpenAPI JSON -> 简化契约 JSON（{ "apis": [...] }）"""
+    """OpenAPI JSON -> Simplified Contract JSON ({ "apis": [...] })"""
     apis = []
 
-    # 预处理：为参数 $ref 做简单解引用
+    # Preprocessing: Simple dereference for parameter $ref
     def _dereference_param(p: dict) -> dict:
         if "$ref" in p:
             return _resolve_ref(oas, p["$ref"]) or {}
@@ -114,7 +114,7 @@ def openapi_to_simple(oas: dict) -> dict:
         if not isinstance(item, dict):
             continue
 
-        # 路径级参数
+        # Path-level parameters
         path_params = [ _dereference_param(p) for p in (item.get("parameters") or []) ]
 
         for method in ("get", "post", "put", "patch", "delete", "options", "head"):
@@ -122,7 +122,7 @@ def openapi_to_simple(oas: dict) -> dict:
             if not isinstance(op, dict):
                 continue
 
-            # 方法级参数
+            # Method-level parameters
             params_all = path_params + [ _dereference_param(p) for p in (op.get("parameters") or []) ]
             params_simple = []
             for p in params_all:
@@ -141,7 +141,7 @@ def openapi_to_simple(oas: dict) -> dict:
                     "required": bool(p.get("required", False)),
                 })
 
-            # requestBody（取 application/json）
+            # requestBody (take application/json)
             req_schema_simple = None
             req = op.get("requestBody")
             if isinstance(req, dict):
@@ -153,7 +153,7 @@ def openapi_to_simple(oas: dict) -> dict:
                     if isinstance(s, dict):
                         req_schema_simple = _oas_schema_to_simple(oas, s)
 
-            # responses（取 application/json）
+            # responses (take application/json)
             resps_simple = {}
             for code, resp in (op.get("responses") or {}).items():
                 if not isinstance(resp, dict):
@@ -178,11 +178,11 @@ def openapi_to_simple(oas: dict) -> dict:
     return {"apis": apis}
 
 
-# ---------- 解析与归一化 ----------
+# ---------- Parsing & Normalization ----------
 
 def parse_contract(*, text: Optional[str] = None, path: Optional[str] = None) -> Dict[str, Any]:
     """
-    解析契约（简化 JSON 或 OpenAPI JSON），并归一化为内部结构：
+    Parse contract (Simplified JSON or OpenAPI JSON) and normalize to internal structure:
     {
       "endpoints": {
         "GET /users/{id}": {
@@ -194,16 +194,16 @@ def parse_contract(*, text: Optional[str] = None, path: Optional[str] = None) ->
     }
     """
     if text is None and path is None:
-        raise ValueError("parse_contract: 必须提供 text 或 path 之一")
+        raise ValueError("parse_contract: Must provide either text or path")
 
     data = load_json_file(path) if path else json.loads(text)
 
-    # 自动识别 OpenAPI（含 paths）
+    # Auto-detect OpenAPI (contains paths)
     if _is_openapi_doc(data):
         data = openapi_to_simple(data)
 
     if not isinstance(data, dict) or "apis" not in data or not isinstance(data["apis"], list):
-        raise ValueError("契约 JSON 格式不正确：根对象应包含 'apis' 列表（或传入 OpenAPI JSON）")
+        raise ValueError("Invalid contract JSON format: Root object should contain 'apis' list (or provide OpenAPI JSON)")
 
     endpoints: Dict[str, Dict[str, Any]] = {}
 
@@ -215,7 +215,7 @@ def parse_contract(*, text: Optional[str] = None, path: Optional[str] = None) ->
 
         key = f"{method} {pathv}"
 
-        # 参数（path/query/header）
+        # Params (path/query/header)
         params_map: Dict[str, Dict[str, Any]] = {}
 
         def _add_param(scope: str, item: Dict[str, Any]):
@@ -235,10 +235,10 @@ def parse_contract(*, text: Optional[str] = None, path: Optional[str] = None) ->
         for p in api.get("pathParams", []) or []:
             _add_param("path", p)
 
-        # 请求体
+        # Request body
         req_fields = flatten_schema(api.get("request")) if api.get("request") else {}
 
-        # 响应体（按状态码展开）
+        # Response body (expand by status code)
         resps: Dict[str, Dict[str, Dict[str, Any]]] = {}
         responses = api.get("responses") or {}
         if isinstance(responses, dict):
@@ -259,8 +259,8 @@ def parse_contract(*, text: Optional[str] = None, path: Optional[str] = None) ->
 
 def flatten_schema(schema: Optional[Dict[str, Any]], prefix: str = "") -> Dict[str, Dict[str, Any]]:
     """
-    将 object/array schema 展平成 {field_path: {"type":..., "required":bool}}。
-    数组用 '[]' 表示，如 items[]、items[].id。
+    Flatten object/array schema into {field_path: {"type":..., "required":bool}}.
+    Arrays are represented by '[]', e.g. items[], items[].id.
     """
     result: Dict[str, Dict[str, Any]] = {}
     if not schema or not isinstance(schema, dict):
@@ -306,12 +306,12 @@ def flatten_schema(schema: Optional[Dict[str, Any]], prefix: str = "") -> Dict[s
     return result
 
 
-# ---------- 对比与兼容性判定 ----------
+# ---------- Comparison and Compatibility Judgment ----------
 
 def _is_non_breaking_widen(old_type: str, new_type: str, *, response_mode: bool) -> bool:
     """
-    非破坏“放宽”判断：仅在请求/参数中允许 integer -> number 。
-    响应中一律保守，视为破坏。
+    Non-breaking "widening" check: allow integer -> number only in requests/parameters.
+    In responses, be conservative and treat it as breaking.
     """
     if response_mode:
         return False
@@ -329,44 +329,44 @@ def _diff_field_maps(
     on_remove_breaking: bool,
     response_mode: bool = False,
 ):
-    """比较两个 {field: {type, required}}，生成变更描述。"""
+    """Compare two {field: {type, required}} maps and generate change description."""
     old_keys = set(old_map)
     new_keys = set(new_map)
 
-    # 删除 / 新增
+    # Remove / Add
     for f in sorted(old_keys - new_keys):
         if on_remove_breaking:
-            breaking.append(f"{category} 删除字段: {f}")
+            breaking.append(f"{category} Removed field: {f}")
         else:
-            non_breaking.append(f"{category} 删除字段: {f}（非破坏）")
+            non_breaking.append(f"{category} Removed field: {f} (non-breaking)")
 
     for f in sorted(new_keys - old_keys):
         req = bool(new_map[f].get("required", False))
         if req and on_add_required_breaking:
-            breaking.append(f"{category} 新增必填字段: {f}")
+            breaking.append(f"{category} Added required field: {f}")
         else:
-            non_breaking.append(f"{category} 新增字段: {f}")
+            non_breaking.append(f"{category} Added field: {f}")
 
-    # 交集：required 与 type 变化
+    # Intersection: required and type changes
     for f in sorted(old_keys & new_keys):
         o = old_map[f]
         n = new_map[f]
         o_req, n_req = bool(o.get("required", False)), bool(n.get("required", False))
         if (not o_req) and n_req:
-            breaking.append(f"{category} 字段改为必填: {f}")
+            breaking.append(f"{category} Field changed to required: {f}")
         elif o_req and (not n_req):
-            non_breaking.append(f"{category} 字段由必填改为可选: {f}")
+            non_breaking.append(f"{category} Field changed from required to optional: {f}")
 
         ot, nt = str(o.get("type", "any")), str(n.get("type", "any"))
         if ot != nt:
             if _is_non_breaking_widen(ot, nt, response_mode=response_mode):
-                non_breaking.append(f"{category} 字段类型放宽: {f} {ot} -> {nt}")
+                non_breaking.append(f"{category} Field type widened: {f} {ot} -> {nt}")
             else:
-                breaking.append(f"{category} 字段类型改变: {f} {ot} -> {nt}")
+                breaking.append(f"{category} Field type changed: {f} {ot} -> {nt}")
 
 
 def compare_contracts(old: Dict[str, Any], new: Dict[str, Any]) -> Dict[str, Any]:
-    """对比两个归一化契约，返回报告 dict。"""
+    """Compare two normalized contracts, return report dict."""
     old_eps = old.get("endpoints", {})
     new_eps = new.get("endpoints", {})
 
@@ -377,25 +377,25 @@ def compare_contracts(old: Dict[str, Any], new: Dict[str, Any]) -> Dict[str, Any
     old_keys = set(old_eps)
     new_keys = set(new_eps)
 
-    # 端点增删
+    # Endpoint add/remove
     removed = sorted(old_keys - new_keys)
     added   = sorted(new_keys - old_keys)
     for k in removed:
-        breaking.append(f"删除端点: {k}")
+        breaking.append(f"Removed endpoint: {k}")
     for k in added:
-        non_breaking.append(f"新增端点: {k}")
+        non_breaking.append(f"Added endpoint: {k}")
 
-    # 端点内部变化
+    # Endpoint internal changes
     for k in sorted(old_keys & new_keys):
         o, n = old_eps[k], new_eps[k]
 
         _diff_field_maps(
-            breaking, non_breaking, category=f"[参数] {k}",
+            breaking, non_breaking, category=f"[Params] {k}",
             old_map=o.get("params", {}), new_map=n.get("params", {}),
             on_add_required_breaking=True, on_remove_breaking=True
         )
         _diff_field_maps(
-            breaking, non_breaking, category=f"[请求体] {k}",
+            breaking, non_breaking, category=f"[Request Body] {k}",
             old_map=o.get("request", {}), new_map=n.get("request", {}),
             on_add_required_breaking=True, on_remove_breaking=True
         )
@@ -404,13 +404,13 @@ def compare_contracts(old: Dict[str, Any], new: Dict[str, Any]) -> Dict[str, Any
         new_resps = n.get("responses", {})
         for code in sorted(set(old_resps) | set(new_resps)):
             if code not in old_resps and code in new_resps:
-                non_breaking.append(f"[响应 {code}] {k} 新增状态码")
+                non_breaking.append(f"[Response {code}] {k} Added status code")
                 continue
             if code in old_resps and code not in new_resps:
-                breaking.append(f"[响应 {code}] {k} 删除状态码")
+                breaking.append(f"[Response {code}] {k} Removed status code")
                 continue
             _diff_field_maps(
-                breaking, non_breaking, category=f"[响应 {code}] {k}",
+                breaking, non_breaking, category=f"[Response {code}] {k}",
                 old_map=old_resps.get(code, {}), new_map=new_resps.get(code, {}),
                 on_add_required_breaking=False, on_remove_breaking=True,
                 response_mode=True
@@ -431,29 +431,29 @@ def compare_contracts(old: Dict[str, Any], new: Dict[str, Any]) -> Dict[str, Any
     }
 
 
-# ---------- 报告渲染 ----------
+# ---------- Report Rendering ----------
 
 def format_report_text(report: Dict[str, Any]) -> str:
     parts = []
     s = report.get("summary", {})
-    parts.append("接口契约对比结果")
-    parts.append(f"- 破坏性变更: {s.get('breaking', 0)}")
-    parts.append(f"- 非破坏性变更: {s.get('non_breaking', 0)}")
+    parts.append("API Contract Diff Results")
+    parts.append(f"- Breaking changes: {s.get('breaking', 0)}")
+    parts.append(f"- Non-breaking changes: {s.get('non_breaking', 0)}")
     parts.append("")
     if report.get("breaking"):
-        parts.append("【破坏性变更】")
+        parts.append("[Breaking Changes]")
         parts.extend(f"  - {x}" for x in report["breaking"])
         parts.append("")
     if report.get("non_breaking"):
-        parts.append("【非破坏性变更】")
+        parts.append("[Non-breaking Changes]")
         parts.extend(f"  - {x}" for x in report["non_breaking"])
         parts.append("")
     if report.get("removed_endpoints"):
-        parts.append("【删除的端点】")
+        parts.append("[Removed Endpoints]")
         parts.extend(f"  - {x}" for x in report["removed_endpoints"])
         parts.append("")
     if report.get("added_endpoints"):
-        parts.append("【新增的端点】")
+        parts.append("[Added Endpoints]")
         parts.extend(f"  - {x}" for x in report["added_endpoints"])
         parts.append("")
     return "\n".join(parts).rstrip() + "\n"
@@ -462,25 +462,25 @@ def format_report_text(report: Dict[str, Any]) -> str:
 def format_report_md(report: Dict[str, Any]) -> str:
     s = report.get("summary", {})
     out = [
-        "# 接口契约对比结果",
-        f"- **破坏性变更**: {s.get('breaking', 0)}",
-        f"- **非破坏性变更**: {s.get('non_breaking', 0)}",
+        "# API Contract Diff Results",
+        f"- **Breaking changes**: {s.get('breaking', 0)}",
+        f"- **Non-breaking changes**: {s.get('non_breaking', 0)}",
         "",
     ]
     if report.get("breaking"):
-        out.append("## 破坏性变更")
+        out.append("## Breaking Changes")
         out.extend(f"- {x}" for x in report["breaking"])
         out.append("")
     if report.get("non_breaking"):
-        out.append("## 非破坏性变更")
+        out.append("## Non-breaking Changes")
         out.extend(f"- {x}" for x in report["non_breaking"])
         out.append("")
     if report.get("removed_endpoints"):
-        out.append("## 删除的端点")
+        out.append("## Removed Endpoints")
         out.extend(f"- {x}" for x in report["removed_endpoints"])
         out.append("")
     if report.get("added_endpoints"):
-        out.append("## 新增的端点")
+        out.append("## Added Endpoints")
         out.extend(f"- {x}" for x in report["added_endpoints"])
         out.append("")
     return "\n".join(out).rstrip() + "\n"
@@ -490,22 +490,22 @@ def format_report_json(report: Dict[str, Any]) -> str:
     return json.dumps(report, ensure_ascii=False, indent=2)
 
 
-# ---------- CLI 接入 ----------
+# ---------- CLI Integration ----------
 
 def register_parser(subparsers):
-    parser = subparsers.add_parser("api-diff", help="接口契约对比器")
-    sub = parser.add_subparsers(dest="action", help="动作")
+    parser = subparsers.add_parser("api-diff", help="API Contract Diff Tool")
+    sub = parser.add_subparsers(dest="action", help="Action")
 
-    cmp_parser = sub.add_parser("compare", help="对比两份契约（简化 JSON 或 OpenAPI JSON）")
-    cmp_parser.add_argument("--old", required=True, help="旧版契约 JSON 文件路径")
-    cmp_parser.add_argument("--new", required=True, help="新版契约 JSON 文件路径")
-    cmp_parser.add_argument("--format", choices=["text", "json", "md"], default="text", help="输出格式")
+    cmp_parser = sub.add_parser("compare", help="Compare two contracts (Simplified JSON or OpenAPI JSON)")
+    cmp_parser.add_argument("--old", required=True, help="Old contract JSON file path")
+    cmp_parser.add_argument("--new", required=True, help="New contract JSON file path")
+    cmp_parser.add_argument("--format", choices=["text", "json", "md"], default="text", help="Output format")
     cmp_parser.set_defaults(func=main)
 
 
 def main(args):
     if getattr(args, "action", None) != "compare":
-        raise RuntimeError("用法：api-diff compare --old v1.json --new v2.json [--format text|json|md]")
+        raise RuntimeError("Usage: api-diff compare --old v1.json --new v2.json [--format text|json|md]")
 
     old_c = parse_contract(path=args.old)
     new_c = parse_contract(path=args.new)

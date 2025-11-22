@@ -1,13 +1,13 @@
 """
-随机数据生成工具
+Random Data Generation Tool
 
-功能：生成UUID、密码、随机数等
-负责人：待分配
-优先级：高
+Features: Generate UUIDs, passwords, random numbers, etc.
+Owner: Unassigned
+Priority: High
 """
 
-# TODO: 实现随机数据生成功能
-# 参考 formatter.py 的结构实现
+# TODO: Implement random data generation functionality
+# Refer to formatter.py structure for implementation
 
 import random
 import string
@@ -18,20 +18,20 @@ from typing import Optional
 
 def generate_uuid(version: int = 4) -> str:
     """
-    生成 UUID
+    Generate UUID
 
     Args:
-        version: UUID 版本 (1, 4)
+        version: UUID version (1, 4)
 
     Returns:
-        UUID 字符串
+        UUID string
     """
     if version == 1:
         return str(uuid.uuid1())
     elif version == 4:
         return str(uuid.uuid4())
     else:
-        raise ValueError(f"不支持的 UUID 版本: {version}")
+        raise ValueError(f"Unsupported UUID version: {version}")
 
 
 def generate_random_string(length: int = 8,
@@ -41,18 +41,18 @@ def generate_random_string(length: int = 8,
                            include_symbols: bool = False,
                            custom_chars: Optional[str] = None) -> str:
     """
-    生成随机字符串
+    Generate random string
 
     Args:
-        length: 字符串长度
-        include_numbers: 是否包含数字
-        include_uppercase: 是否包含大写字母
-        include_lowercase: 是否包含小写字母
-        include_symbols: 是否包含特殊符号
-        custom_chars: 自定义字符集
+        length: String length
+        include_numbers: Include numbers
+        include_uppercase: Include uppercase letters
+        include_lowercase: Include lowercase letters
+        include_symbols: Include special symbols
+        custom_chars: Custom character set
 
     Returns:
-        随机字符串
+        Random string
     """
     if custom_chars:
         chars = custom_chars
@@ -68,28 +68,28 @@ def generate_random_string(length: int = 8,
             chars += "!@#$%^&*()-_=+[]{}|;:,.<>?"
 
     if not chars:
-        raise ValueError("至少需要选择一种字符类型")
+        raise ValueError("At least one character type must be selected")
 
     return ''.join(secrets.choice(chars) for _ in range(length))
 
 
 def generate_secure_password(length: int = 16) -> str:
     """
-    生成安全密码
+    Generate secure password
 
     Args:
-        length: 密码长度
+        length: Password length
 
     Returns:
-        安全密码字符串
+        Secure password string
     """
     if length < 8:
-        raise ValueError("密码长度至少为 8 位")
+        raise ValueError("Password length must be at least 8 characters")
 
-    # 确保密码包含所有字符类型
+    # Ensure password contains all character types
     chars = string.ascii_letters + string.digits + "!@#$%^&*()-_=+"
 
-    # 至少包含一个每种类型的字符
+    # At least one character of each type
     password = [
         secrets.choice(string.ascii_lowercase),
         secrets.choice(string.ascii_uppercase),
@@ -97,11 +97,11 @@ def generate_secure_password(length: int = 16) -> str:
         secrets.choice("!@#$%^&*()-_=+")
     ]
 
-    # 填充剩余长度
+    # Fill remaining length
     for _ in range(length - 4):
         password.append(secrets.choice(chars))
 
-    # 打乱顺序
+    # Shuffle
     secrets.SystemRandom().shuffle(password)
 
     return ''.join(password)
@@ -109,29 +109,29 @@ def generate_secure_password(length: int = 16) -> str:
 
 def generate_random_number(min_val: int = 0, max_val: int = 100) -> int:
     """
-    生成随机整数
+    Generate random integer
 
     Args:
-        min_val: 最小值
-        max_val: 最大值
+        min_val: Minimum value
+        max_val: Maximum value
 
     Returns:
-        随机整数
+        Random integer
     """
     return secrets.randbelow(max_val - min_val + 1) + min_val
 
 
 def generate_random_float(min_val: float = 0.0, max_val: float = 1.0, precision: int = 2) -> float:
     """
-    生成随机浮点数
+    Generate random float
 
     Args:
-        min_val: 最小值
-        max_val: 最大值
-        precision: 小数位数
+        min_val: Minimum value
+        max_val: Maximum value
+        precision: Decimal places
 
     Returns:
-        随机浮点数
+        Random float
     """
     random_float = random.uniform(min_val, max_val)
     return round(random_float, precision)
@@ -139,53 +139,53 @@ def generate_random_float(min_val: float = 0.0, max_val: float = 1.0, precision:
 
 def generate_random_hex_color() -> str:
     """
-    生成随机十六进制颜色代码
+    Generate random hex color code
 
     Returns:
-        颜色代码 (如 #FF5733)
+        Color code (e.g. #FF5733)
     """
     return f"#{random.randint(0, 0xFFFFFF):06X}"
 
 
 def register_parser(subparsers):
-    """注册 random-gen 命令的参数解析器"""
-    parser = subparsers.add_parser('random', help='随机数据生成工具')
+    """Register parser for random-gen command"""
+    parser = subparsers.add_parser('random', help='Random data generation tool')
 
-    subcommands = parser.add_subparsers(dest='type', help='生成类型')
+    subcommands = parser.add_subparsers(dest='type', help='Generation type')
 
-    # UUID 生成
-    uuid_parser = subcommands.add_parser('uuid', help='生成 UUID')
+    # UUID Generation
+    uuid_parser = subcommands.add_parser('uuid', help='Generate UUID')
     uuid_parser.add_argument('--version', '-v', type=int, choices=[1, 4], default=4,
-                             help='UUID 版本 (默认: 4)')
+                             help='UUID version (default: 4)')
 
-    # 随机字符串生成
-    string_parser = subcommands.add_parser('string', help='生成随机字符串')
-    string_parser.add_argument('--length', '-l', type=int, default=8, help='字符串长度 (默认: 8)')
-    string_parser.add_argument('--no-numbers', action='store_true', help='不包含数字')
-    string_parser.add_argument('--no-uppercase', action='store_true', help='不包含大写字母')
-    string_parser.add_argument('--no-lowercase', action='store_true', help='不包含小写字母')
-    string_parser.add_argument('--symbols', action='store_true', help='包含特殊符号')
-    string_parser.add_argument('--custom', help='自定义字符集')
+    # Random String Generation
+    string_parser = subcommands.add_parser('string', help='Generate random string')
+    string_parser.add_argument('--length', '-l', type=int, default=8, help='String length (default: 8)')
+    string_parser.add_argument('--no-numbers', action='store_true', help='Exclude numbers')
+    string_parser.add_argument('--no-uppercase', action='store_true', help='Exclude uppercase letters')
+    string_parser.add_argument('--no-lowercase', action='store_true', help='Exclude lowercase letters')
+    string_parser.add_argument('--symbols', action='store_true', help='Include special symbols')
+    string_parser.add_argument('--custom', help='Custom character set')
 
-    # 安全密码生成
-    password_parser = subcommands.add_parser('password', help='生成安全密码')
-    password_parser.add_argument('--length', '-l', type=int, default=16, help='密码长度 (默认: 16)')
+    # Secure Password Generation
+    password_parser = subcommands.add_parser('password', help='Generate secure password')
+    password_parser.add_argument('--length', '-l', type=int, default=16, help='Password length (default: 16)')
 
-    # 随机数生成
-    number_parser = subcommands.add_parser('number', help='生成随机数')
-    number_parser.add_argument('--min', type=int, default=0, help='最小值 (默认: 0)')
-    number_parser.add_argument('--max', type=int, default=100, help='最大值 (默认: 100)')
-    number_parser.add_argument('--float', action='store_true', help='生成浮点数')
-    number_parser.add_argument('--precision', type=int, default=2, help='浮点数精度 (默认: 2)')
+    # Random Number Generation
+    number_parser = subcommands.add_parser('number', help='Generate random number')
+    number_parser.add_argument('--min', type=int, default=0, help='Minimum value (default: 0)')
+    number_parser.add_argument('--max', type=int, default=100, help='Maximum value (default: 100)')
+    number_parser.add_argument('--float', action='store_true', help='Generate float number')
+    number_parser.add_argument('--precision', type=int, default=2, help='Float precision (default: 2)')
 
-    # 颜色代码生成
-    color_parser = subcommands.add_parser('color', help='生成随机颜色代码')
+    # Color Code Generation
+    color_parser = subcommands.add_parser('color', help='Generate random color code')
 
     parser.set_defaults(func=main)
 
 
 def main(args):
-    """random-gen 工具的主函数"""
+    """Main function for random-gen tool"""
     try:
         if args.type == 'uuid':
             return generate_uuid(args.version)
@@ -215,16 +215,16 @@ def main(args):
             return generate_random_hex_color()
 
         else:
-            raise ValueError("请选择生成类型: uuid, string, password, number, color")
+            raise ValueError("Please select generation type: uuid, string, password, number, color")
 
     except Exception as e:
-        raise RuntimeError(f"生成失败: {e}")
+        raise RuntimeError(f"Generation failed: {e}")
 
 
 if __name__ == "__main__":
-    # 用于独立测试
+    # For standalone testing
     print("UUID:", generate_uuid())
-    print("随机字符串:", generate_random_string(12))
-    print("安全密码:", generate_secure_password(16))
-    print("随机数:", generate_random_number(1, 100))
-    print("颜色代码:", generate_random_hex_color())
+    print("Random String:", generate_random_string(12))
+    print("Secure Password:", generate_secure_password(16))
+    print("Random Number:", generate_random_number(1, 100))
+    print("Color Code:", generate_random_hex_color())

@@ -12,11 +12,11 @@ from io import StringIO
 
 class FormatDetector:
     """
-    统一格式检测器类，支持JSON、XML、CSV格式检测
+    Unified format detector class, supports JSON, XML, CSV format detection
     """
     
     class JSONDetector:
-        """JSON格式检测器"""
+        """JSON format detector"""
         
         def detect(self, content):
             content = content.strip()
@@ -61,7 +61,7 @@ class FormatDetector:
                 }
 
     class XMLDetector:
-        """XML格式检测器"""
+        """XML format detector"""
         
         def detect(self, content):
             content = content.strip()
@@ -114,7 +114,7 @@ class FormatDetector:
                 }
 
     class CSVDetector:
-        """CSV格式检测器"""
+        """CSV format detector"""
         
         def detect(self, content):
             content = content.strip()
@@ -188,7 +188,7 @@ class FormatDetector:
                 }
 
     def __init__(self):
-        """初始化检测器"""
+        """Initialize detector"""
         self.detectors = {
             'json': self.JSONDetector(),
             'xml': self.XMLDetector(),
@@ -196,7 +196,7 @@ class FormatDetector:
         }
     
     def detect_file(self, file_path):
-        """检测文件格式"""
+        """Detect file format"""
         if not os.path.exists(file_path):
             return {'error': f'File does not exist: {file_path}'}
         
@@ -209,7 +209,7 @@ class FormatDetector:
         return self.detect_content(content, file_path)
     
     def detect_content(self, content, filename=None):
-        """检测内容格式"""
+        """Detect content format"""
         if not content.strip():
             return {'error': 'Content is empty'}
         
@@ -235,7 +235,7 @@ class FormatDetector:
         return results
     
     def _get_most_likely_format(self, detections):
-        """获取最可能的格式"""
+        """Get most likely format"""
         valid_formats = {
             fmt: details['confidence'] 
             for fmt, details in detections.items() 
@@ -248,7 +248,7 @@ class FormatDetector:
         return max(valid_formats.items(), key=lambda x: x[1])[0]
 
     def batch_detect(self, directory_path):
-        """批量检测目录中的文件"""
+        """Batch detect files in directory"""
         directory = Path(directory_path)
         if not directory.exists() or not directory.is_dir():
             return {'error': f'Directory does not exist: {directory_path}'}
@@ -267,7 +267,7 @@ class FormatDetector:
 
     @staticmethod
     def print_detection_result(result, verbose=False):
-        """打印检测结果"""
+        """Print detection result"""
         if 'error' in result:
             print(f"Error: {result['error']}")
             return
@@ -292,19 +292,19 @@ class FormatDetector:
         print(f"\nMost likely format: {result.get('most_likely_format', 'unknown').upper()}")
 
 
-# 使用示例
+# Usage example
 if __name__ == "__main__":
-    # 创建检测器实例
+    # Create detector instance
     detector = FormatDetector()
     
-    # 测试内容检测
+    # Test content detection
     json_content = '{"name": "John", "age": 30}'
     result = detector.detect_content(json_content, "test.json")
     detector.print_detection_result(result, verbose=True)
     
     print("\n" + "="*50 + "\n")
     
-    # 测试文件检测
+    # Test file detection
     # detector.print_detection_result(detector.detect_file("example.json"))
     
     print("✅ Format detector class defined successfully!")

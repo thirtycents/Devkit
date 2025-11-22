@@ -1,6 +1,6 @@
 """
-GUI 应用程序 (使用 tkinter)
-DevKit-Zero 的图形界面
+GUI Application (using tkinter)
+DevKit-Zero Graphical Interface
 """
 
 import tkinter as tk
@@ -10,30 +10,30 @@ import os
 import re
 from pathlib import Path
 
-# 处理相对导入和直接运行的兼容性
+# Handle relative import and direct execution compatibility
 try:
-    # 尝试相对导入(作为模块运行时)
+    # Try relative import (when running as a module)
     from ..tools import formatter, random_gen, diff_tool, converter, linter, unused_func_detector, api_contract_diff, \
         port_checker, regex_tester
     from ..tools.Robot_checker import core_logic as robots_core_logic
 except ImportError:
-    # 如果相对导入失败,添加父目录到路径(直接运行时)
+    # If relative import fails, add parent directory to path (when running directly)
     sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
     from devkit_zero.tools import formatter, random_gen, diff_tool, converter, linter, unused_func_detector, \
         api_contract_diff, port_checker, regex_tester
     from devkit_zero.tools.Robot_checker import core_logic as robots_core_logic
 
 
-# 动态导入文件工具类，处理不同的目录结构
+# Dynamically import file tool classes, handling different directory structures
 def import_file_tools():
-    """动态导入文件工具模块"""
-    # 可能的模块路径
+    """Dynamically import file tool modules"""
+    # Possible module paths
     possible_paths = [
-        # 从父目录的tools文件夹导入
+        # Import from parent directory's tools folder
         os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'tools')),
-        # 从当前目录的父目录导入
+        # Import from parent directory of current directory
         os.path.abspath(os.path.join(os.path.dirname(__file__), '..')),
-        # 从当前目录导入
+        # Import from current directory
         os.path.dirname(__file__),
     ]
 
@@ -41,32 +41,32 @@ def import_file_tools():
         if path not in sys.path:
             sys.path.insert(0, path)
 
-    # 尝试不同的导入方式
+    # Try different import methods
     
-        # 方式1: 直接从tools模块导入
+        # Method 1: Import directly from tools module
     from tools.batch_process import BatchFileProcessor
     from tools.FormatDetector import FormatDetector
     return BatchFileProcessor, FormatDetector
     # except ImportError:
     #     try:
-    #         # 方式2: 从当前目录的tools子文件夹导入
+    #         # Method 2: Import from tools subfolder in current directory
     #         sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'tools'))
     #         from batch_process import BatchFileProcessor
     #         from FormatDetector import FormatDetector
     #         return BatchFileProcessor, FormatDetector
     #     except ImportError:
     #         try:
-    #             # 方式3: 直接导入
+    #             # Method 3: Import directly
     #             from batch_process import BatchFileProcessor
     #             from FormatDetector import FormatDetector
     #             return BatchFileProcessor, FormatDetector
     #         except ImportError as e:
-    #             print(f"文件工具导入失败: {e}")
+    #             print(f"File tools import failed: {e}")
     #             return None, None
 
 
 class PlaceholderEntry(ttk.Entry):
-    """支持占位符文本的Entry控件"""
+    """Entry widget with placeholder text support"""
 
     def __init__(self, parent, placeholder="", *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
@@ -94,7 +94,7 @@ class PlaceholderEntry(ttk.Entry):
         self.config(foreground=self.placeholder_color)
 
     def get_value(self):
-        """获取实际值（如果不是占位符）"""
+        """Get actual value (if not placeholder)"""
         value = self.get()
         if value == self.placeholder:
             return ""
@@ -102,21 +102,21 @@ class PlaceholderEntry(ttk.Entry):
 
 
 class DevKitZeroGUI:
-    """DevKit-Zero GUI 主类"""
+    """DevKit-Zero GUI Main Class"""
 
     def __init__(self):
         self.root = tk.Tk()
-        self.root.title("DevKit-Zero - 零依赖开发者工具箱")
+        self.root.title("DevKit-Zero - Zero Dependency Developer Toolkit")
         self.root.geometry("1100x650")
         self.root.resizable(True, True)
 
-        # 创建工具实例
+        # Create tool instances
         self.regex_tester = regex_tester.RegexTester()
 
-        # 导入文件工具
+        # Import file tools
         self.BatchFileProcessor, self.FormatDetector = import_file_tools()
 
-        # 设置图标 (如果存在)
+        # Set icon (if exists)
         try:
             icon_path = os.path.join(os.path.dirname(__file__), '..', '..', 'assets', 'app.ico')
             if os.path.exists(icon_path):
@@ -127,78 +127,78 @@ class DevKitZeroGUI:
         self.setup_ui()
 
     def setup_ui(self):
-        """设置用户界面"""
-        # 创建主框架
+        """Setup user interface"""
+        # Create main frame
         main_frame = ttk.Frame(self.root, padding="10")
         main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
-        # 配置权重
+        # Configure weights
         self.root.columnconfigure(0, weight=1)
         self.root.rowconfigure(0, weight=1)
         main_frame.columnconfigure(1, weight=1)
         main_frame.rowconfigure(1, weight=1)
 
-        # 工具选择区域
-        tool_frame = ttk.LabelFrame(main_frame, text="工具选择", padding="10")
+        # Tool selection area
+        tool_frame = ttk.LabelFrame(main_frame, text="Tool Selection", padding="10")
         tool_frame.grid(row=0, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(0, 10))
 
         self.tool_var = tk.StringVar(value="formatter")
         tools = [
-            ("代码格式化", "formatter"),
-            ("随机数据生成", "random_gen"),
-            ("文本差异对比", "diff_tool"),
-            ("数据格式转换", "converter"),
-            ("代码静态检查", "linter"),
-            ("未使用函数检测", "unused_func"),
-            ("端口检查", "port_checker"),
-            ("接口契约对比器", "api_diff"),
-            ("正则表达式测试", "regex_tester"),
-            ("Robots检查器", "robots_checker"),
-            ("批量文件处理器", "batch_processor"),  # 新增
-            ("格式检测器", "format_detector")  # 新增
+            ("Code Formatter", "formatter"),
+            ("Random Generator", "random_gen"),
+            ("Text Diff", "diff_tool"),
+            ("Format Converter", "converter"),
+            ("Code Linter", "linter"),
+            ("Unused Function", "unused_func"),
+            ("Port Checker", "port_checker"),
+            ("API Contract Diff", "api_diff"),
+            ("Regex Tester", "regex_tester"),
+            ("Robots Checker", "robots_checker"),
+            ("Batch Processor", "batch_processor"),
+            ("Format Detector", "format_detector")
         ]
 
-        # 创建两行工具选择按钮
+        # Create two rows of tool selection buttons
         for i, (name, value) in enumerate(tools):
-            row = 0 if i < 8 else 1  # 前8个在第一行，其余在第二行
+            row = 0 if i < 8 else 1  # First 8 in the first row, others in the second row
             col = i if i < 8 else i - 8
             ttk.Radiobutton(tool_frame, text=name, variable=self.tool_var,
                             value=value, command=self.on_tool_change).grid(row=row, column=col, padx=5, pady=2)
 
-        # 左侧控制面板
-        control_frame = ttk.LabelFrame(main_frame, text="控制面板", padding="10")
+        # Left control panel
+        control_frame = ttk.LabelFrame(main_frame, text="Control Panel", padding="10")
         control_frame.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), padx=(0, 10))
         control_frame.columnconfigure(0, weight=1)
         control_frame.rowconfigure(0, weight=1)
-        # 右侧结果面板
-        result_frame = ttk.LabelFrame(main_frame, text="结果输出", padding="10")
+        # Right result panel
+        result_frame = ttk.LabelFrame(main_frame, text="Result Output", padding="10")
         result_frame.grid(row=1, column=1, sticky=(tk.W, tk.E, tk.N, tk.S))
         result_frame.columnconfigure(0, weight=1)
         result_frame.rowconfigure(0, weight=1)
 
-        # 结果文本框（用于大部分工具）
+        # Result text box (for most tools)
         self.result_text = scrolledtext.ScrolledText(result_frame, wrap=tk.WORD, height=20)
         self.result_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
-        # 控制面板和结果面板容器
+        # Control panel and result panel container
         self.control_container = control_frame
         self.result_container = result_frame
 
-        # 初始化工具面板
+        # Initialize tool panel
         self.on_tool_change()
 
     def on_tool_change(self):
-        """工具选择改变时的处理"""
-        # 清除控制面板现有控件
+        """Handle tool selection change"""
+        # Clear existing widgets in control panel
         for widget in self.control_container.winfo_children():
             widget.destroy()
 
         tool = self.tool_var.get()
 
-        # 清除结果容器并根据工具类型设置结果面板
+        # Clear result container and setup result panel based on tool type
         for widget in self.result_container.winfo_children():
             widget.destroy()
 
-        # 为使用默认结果文本框的工具重新创建结果文本框
+        # Recreate result text box for tools using default result text box
         if tool not in ["regex_tester", "robots_checker"]:
             self.result_text = scrolledtext.ScrolledText(self.result_container, wrap=tk.WORD, height=20)
             self.result_text.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
@@ -222,155 +222,155 @@ class DevKitZeroGUI:
             self.setup_regex_tester_ui()
         elif tool == "robots_checker":
             self.setup_robots_checker_ui()
-        elif tool == "batch_processor":  # 新增
+        elif tool == "batch_processor":  # New
             self.setup_batch_processor_ui()
-        elif tool == "format_detector":  # 新增
+        elif tool == "format_detector":  # New
             self.setup_format_detector_ui()
 
     def setup_formatter_ui(self):
-        """设置代码格式化工具界面"""
-        # 语言选择
-        ttk.Label(self.control_container, text="编程语言:").grid(row=0, column=0, sticky=tk.W, pady=2)
+        """Setup code formatter tool UI"""
+        # Language selection
+        ttk.Label(self.control_container, text="Language:").grid(row=0, column=0, sticky=tk.W, pady=2)
         self.format_lang_var = tk.StringVar(value="python")
         lang_combo = ttk.Combobox(self.control_container, textvariable=self.format_lang_var,
                                   values=["python", "javascript"], state="readonly")
         lang_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=2)
 
-        # 输入方式选择
-        ttk.Label(self.control_container, text="输入方式:").grid(row=1, column=0, sticky=tk.W, pady=2)
+        # Input method selection
+        ttk.Label(self.control_container, text="Input Type:").grid(row=1, column=0, sticky=tk.W, pady=2)
         self.format_input_type = tk.StringVar(value="text")
-        ttk.Radiobutton(self.control_container, text="直接输入", variable=self.format_input_type,
+        ttk.Radiobutton(self.control_container, text="Direct Input", variable=self.format_input_type,
                         value="text").grid(row=1, column=1, sticky=tk.W, pady=2)
-        ttk.Radiobutton(self.control_container, text="选择文件", variable=self.format_input_type,
+        ttk.Radiobutton(self.control_container, text="Select File", variable=self.format_input_type,
                         value="file").grid(row=2, column=1, sticky=tk.W, pady=2)
 
-        # 文件选择
+        # File selection
         file_frame = ttk.Frame(self.control_container)
         file_frame.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=2)
         file_frame.columnconfigure(0, weight=1)
 
         self.format_file_var = tk.StringVar()
         ttk.Entry(file_frame, textvariable=self.format_file_var).grid(row=0, column=0, sticky=(tk.W, tk.E))
-        ttk.Button(file_frame, text="选择", command=self.select_format_file).grid(row=0, column=1, padx=(5, 0))
+        ttk.Button(file_frame, text="Select", command=self.select_format_file).grid(row=0, column=1, padx=(5, 0))
 
-        # 代码输入框
-        ttk.Label(self.control_container, text="代码输入:").grid(row=4, column=0, sticky=tk.W, pady=(10, 2))
+        # Code input box
+        ttk.Label(self.control_container, text="Code Input:").grid(row=4, column=0, sticky=tk.W, pady=(10, 2))
         self.format_code_text = tk.Text(self.control_container, height=10, wrap=tk.WORD)
         self.format_code_text.grid(row=5, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=2)
 
-        # 执行按钮
-        ttk.Button(self.control_container, text="格式化代码",
+        # Execute button
+        ttk.Button(self.control_container, text="Format Code",
                    command=self.run_formatter).grid(row=6, column=0, columnspan=2, pady=(10, 0))
 
         self.control_container.columnconfigure(1, weight=1)
 
     def setup_random_gen_ui(self):
-        """设置随机数据生成工具界面"""
-        # 生成类型
-        ttk.Label(self.control_container, text="生成类型:").grid(row=0, column=0, sticky=tk.W, pady=2)
+        """Setup random data generator tool UI"""
+        # Generation type
+        ttk.Label(self.control_container, text="Type:").grid(row=0, column=0, sticky=tk.W, pady=2)
         self.random_type_var = tk.StringVar(value="uuid")
         type_combo = ttk.Combobox(self.control_container, textvariable=self.random_type_var,
                                   values=["uuid", "string", "password", "number", "color"], state="readonly")
         type_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=2)
         type_combo.bind('<<ComboboxSelected>>', self.on_random_type_change)
 
-        # 动态参数框架
+        # Dynamic parameters frame
         self.random_params_frame = ttk.Frame(self.control_container)
         self.random_params_frame.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
         self.random_params_frame.columnconfigure(1, weight=1)
 
-        # 执行按钮
-        ttk.Button(self.control_container, text="生成",
+        # Execute button
+        ttk.Button(self.control_container, text="Generate",
                    command=self.run_random_gen).grid(row=2, column=0, columnspan=2, pady=(10, 0))
 
         self.control_container.columnconfigure(1, weight=1)
 
-        # 初始化参数界面
+        # Initialize parameters UI
         self.on_random_type_change()
 
     def setup_diff_tool_ui(self):
-        """设置文本差异对比工具界面"""
-        # 文本1
-        ttk.Label(self.control_container, text="文本1:").grid(row=0, column=0, sticky=tk.W, pady=2)
+        """Setup text diff tool UI"""
+        # Text 1
+        ttk.Label(self.control_container, text="Text 1:").grid(row=0, column=0, sticky=tk.W, pady=2)
         self.diff_text1 = tk.Text(self.control_container, height=8, wrap=tk.WORD)
         self.diff_text1.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=2)
-        # 文本2
-        ttk.Label(self.control_container, text="文本2:").grid(row=2, column=0, sticky=tk.W, pady=2)
+        # Text 2
+        ttk.Label(self.control_container, text="Text 2:").grid(row=2, column=0, sticky=tk.W, pady=2)
         self.diff_text2 = tk.Text(self.control_container, height=8, wrap=tk.WORD)
         self.diff_text2.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=2)
-        # 对比格式
-        ttk.Label(self.control_container, text="输出格式:").grid(row=4, column=0, sticky=tk.W, pady=2)
+        # Comparison format
+        ttk.Label(self.control_container, text="Output Format:").grid(row=4, column=0, sticky=tk.W, pady=2)
         self.diff_format_var = tk.StringVar(value="unified")
         format_combo = ttk.Combobox(self.control_container, textvariable=self.diff_format_var,
                                     values=["unified", "side-by-side", "stats"], state="readonly")
         format_combo.grid(row=4, column=1, sticky=(tk.W, tk.E), pady=2)
 
-        # 执行按钮
-        ttk.Button(self.control_container, text="对比差异",
+        # Execute button
+        ttk.Button(self.control_container, text="Compare Diff",
                    command=self.run_diff_tool).grid(row=5, column=0, columnspan=2, pady=(10, 0))
 
         self.control_container.columnconfigure(1, weight=1)
 
     def setup_converter_ui(self):
-        """设置数据格式转换工具界面"""
-        # 转换格式选择
-        ttk.Label(self.control_container, text="从格式:").grid(row=0, column=0, sticky=tk.W, pady=2)
+        """Setup data format converter tool UI"""
+        # Conversion format selection
+        ttk.Label(self.control_container, text="From Format:").grid(row=0, column=0, sticky=tk.W, pady=2)
         self.convert_from_var = tk.StringVar(value="json")
         from_combo = ttk.Combobox(self.control_container, textvariable=self.convert_from_var,
                                   values=["json", "csv"], state="readonly")
         from_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=2)
 
-        ttk.Label(self.control_container, text="到格式:").grid(row=1, column=0, sticky=tk.W, pady=2)
+        ttk.Label(self.control_container, text="To Format:").grid(row=1, column=0, sticky=tk.W, pady=2)
         self.convert_to_var = tk.StringVar(value="csv")
         to_combo = ttk.Combobox(self.control_container, textvariable=self.convert_to_var,
                                 values=["json", "csv"], state="readonly")
         to_combo.grid(row=1, column=1, sticky=(tk.W, tk.E), pady=2)
 
-        # 输入数据
-        ttk.Label(self.control_container, text="输入数据:").grid(row=2, column=0, sticky=tk.W, pady=(10, 2))
+        # Input data
+        ttk.Label(self.control_container, text="Input Data:").grid(row=2, column=0, sticky=tk.W, pady=(10, 2))
         self.convert_input_text = tk.Text(self.control_container, height=12, wrap=tk.WORD)
         self.convert_input_text.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=2)
 
-        # 执行按钮
-        ttk.Button(self.control_container, text="转换格式",
+        # Execute button
+        ttk.Button(self.control_container, text="Convert Format",
                    command=self.run_converter).grid(row=4, column=0, columnspan=2, pady=(10, 0))
 
         self.control_container.columnconfigure(1, weight=1)
 
     def setup_linter_ui(self):
-        """设置代码静态检查工具界面"""
-        # 输入方式选择
-        ttk.Label(self.control_container, text="输入方式:").grid(row=0, column=0, sticky=tk.W, pady=2)
+        """Setup code linter tool UI"""
+        # Input method selection
+        ttk.Label(self.control_container, text="Input Type:").grid(row=0, column=0, sticky=tk.W, pady=2)
         self.lint_input_type = tk.StringVar(value="text")
-        ttk.Radiobutton(self.control_container, text="直接输入", variable=self.lint_input_type,
+        ttk.Radiobutton(self.control_container, text="Direct Input", variable=self.lint_input_type,
                         value="text").grid(row=0, column=1, sticky=tk.W, pady=2)
-        ttk.Radiobutton(self.control_container, text="选择文件", variable=self.lint_input_type,
+        ttk.Radiobutton(self.control_container, text="Select File", variable=self.lint_input_type,
                         value="file").grid(row=1, column=1, sticky=tk.W, pady=2)
 
-        # 文件选择
+        # File selection
         file_frame = ttk.Frame(self.control_container)
         file_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=2)
         file_frame.columnconfigure(0, weight=1)
 
         self.lint_file_var = tk.StringVar()
         ttk.Entry(file_frame, textvariable=self.lint_file_var).grid(row=0, column=0, sticky=(tk.W, tk.E))
-        ttk.Button(file_frame, text="选择", command=self.select_lint_file).grid(row=0, column=1, padx=(5, 0))
+        ttk.Button(file_frame, text="Select", command=self.select_lint_file).grid(row=0, column=1, padx=(5, 0))
 
-        # 代码输入框
-        ttk.Label(self.control_container, text="代码输入:").grid(row=3, column=0, sticky=tk.W, pady=(10, 2))
+        # Code input box
+        ttk.Label(self.control_container, text="Code Input:").grid(row=3, column=0, sticky=tk.W, pady=(10, 2))
         self.lint_code_text = tk.Text(self.control_container, height=12, wrap=tk.WORD)
         self.lint_code_text.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=2)
 
-        # 执行按钮
-        ttk.Button(self.control_container, text="检查代码",
+        # Execute button
+        ttk.Button(self.control_container, text="Lint Code",
                    command=self.run_linter).grid(row=5, column=0, columnspan=2, pady=(10, 0))
 
         self.control_container.columnconfigure(1, weight=1)
 
     def setup_unused_func_ui(self):
-        """设置未使用函数检测工具界面"""
-        # 项目路径选择
-        ttk.Label(self.control_container, text="项目路径:").grid(row=0, column=0, sticky=tk.W, pady=2)
+        """Setup unused function detector tool UI"""
+        # Project path selection
+        ttk.Label(self.control_container, text="Project Path:").grid(row=0, column=0, sticky=tk.W, pady=2)
 
         path_frame = ttk.Frame(self.control_container)
         path_frame.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=2)
@@ -378,60 +378,60 @@ class DevKitZeroGUI:
 
         self.unused_func_path_var = tk.StringVar(value=".")
         ttk.Entry(path_frame, textvariable=self.unused_func_path_var).grid(row=0, column=0, sticky=(tk.W, tk.E))
-        ttk.Button(path_frame, text="选择目录", command=self.select_project_dir).grid(row=0, column=1, padx=(5, 0))
+        ttk.Button(path_frame, text="Select Dir", command=self.select_project_dir).grid(row=0, column=1, padx=(5, 0))
 
-        # 排除目录
-        ttk.Label(self.control_container, text="排除目录:").grid(row=2, column=0, sticky=tk.W, pady=(10, 2))
-        ttk.Label(self.control_container, text="(逗号分隔)", font=("", 8)).grid(row=2, column=1, sticky=tk.W,
+        # Exclude directories
+        ttk.Label(self.control_container, text="Exclude Dirs:").grid(row=2, column=0, sticky=tk.W, pady=(10, 2))
+        ttk.Label(self.control_container, text="(comma separated)", font=("", 8)).grid(row=2, column=1, sticky=tk.W,
                                                                                 pady=(10, 2))
 
         self.unused_func_exclude_var = tk.StringVar(value="venv,__pycache__,.git,build,dist")
         ttk.Entry(self.control_container, textvariable=self.unused_func_exclude_var).grid(
             row=3, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=2)
 
-        # 输出格式
-        ttk.Label(self.control_container, text="输出格式:").grid(row=4, column=0, sticky=tk.W, pady=(10, 2))
+        # Output format
+        ttk.Label(self.control_container, text="Output Format:").grid(row=4, column=0, sticky=tk.W, pady=(10, 2))
         self.unused_func_format_var = tk.StringVar(value="text")
         format_frame = ttk.Frame(self.control_container)
         format_frame.grid(row=5, column=0, columnspan=2, sticky=tk.W, pady=2)
 
-        ttk.Radiobutton(format_frame, text="文本", variable=self.unused_func_format_var,
+        ttk.Radiobutton(format_frame, text="Text", variable=self.unused_func_format_var,
                         value="text").grid(row=0, column=0, padx=(0, 10))
         ttk.Radiobutton(format_frame, text="JSON", variable=self.unused_func_format_var,
                         value="json").grid(row=0, column=1, padx=(0, 10))
         ttk.Radiobutton(format_frame, text="HTML", variable=self.unused_func_format_var,
                         value="html").grid(row=0, column=2)
 
-        # 详细输出选项
+        # Verbose output option
         self.unused_func_verbose_var = tk.BooleanVar(value=True)
-        ttk.Checkbutton(self.control_container, text="显示详细信息",
+        ttk.Checkbutton(self.control_container, text="Show Verbose Info",
                         variable=self.unused_func_verbose_var).grid(row=6, column=0, columnspan=2, sticky=tk.W,
                                                                     pady=(10, 2))
 
-        # 执行按钮
-        ttk.Button(self.control_container, text="检测未使用函数",
+        # Execute button
+        ttk.Button(self.control_container, text="Detect Unused Functions",
                    command=self.run_unused_func_detector).grid(row=7, column=0, columnspan=2, pady=(10, 0))
 
         self.control_container.columnconfigure(1, weight=1)
 
     def select_project_dir(self):
-        """选择项目目录"""
+        """Select project directory"""
         directory = filedialog.askdirectory(
-            title="选择要分析的项目目录",
+            title="Select Project Directory to Analyze",
             initialdir="."
         )
         if directory:
             self.unused_func_path_var.set(directory)
     def on_random_type_change(self, event=None):
-        """随机数据类型改变时更新参数界面"""
-        # 清除现有参数控件
+        """Update parameter UI when random data type changes"""
+        # Clear existing parameter widgets
         for widget in self.random_params_frame.winfo_children():
             widget.destroy()
 
         gen_type = self.random_type_var.get()
 
         if gen_type == "string":
-            ttk.Label(self.random_params_frame, text="长度:").grid(row=0, column=0, sticky=tk.W, pady=2)
+            ttk.Label(self.random_params_frame, text="Length:").grid(row=0, column=0, sticky=tk.W, pady=2)
             self.string_length_var = tk.StringVar(value="8")
             ttk.Entry(self.random_params_frame, textvariable=self.string_length_var, width=10).grid(row=0, column=1,
                                                                                                     sticky=tk.W, pady=2)
@@ -442,59 +442,59 @@ class DevKitZeroGUI:
             self.string_symbols_var = tk.BooleanVar(value=False)
             
             
-            ttk.Checkbutton(self.random_params_frame, text="包含数字", variable=self.string_numbers_var).grid(row=1,
+            ttk.Checkbutton(self.random_params_frame, text="Include Numbers", variable=self.string_numbers_var).grid(row=1,
                                                                                                           column=0,
                                                                                                           sticky=tk.W,
                                                                                                           pady=1)
-            ttk.Checkbutton(self.random_params_frame, text="包含大写字母", variable=self.string_uppercase_var).grid(row=2,
+            ttk.Checkbutton(self.random_params_frame, text="Include Uppercase", variable=self.string_uppercase_var).grid(row=2,
                                                                                                               column=0,
                                                                                                               sticky=tk.W,
                                                                                                               pady=1)
-            ttk.Checkbutton(self.random_params_frame, text="包含小写字母", variable=self.string_lowercase_var).grid(row=3,
+            ttk.Checkbutton(self.random_params_frame, text="Include Lowercase", variable=self.string_lowercase_var).grid(row=3,
                                                                                                               column=0,
                                                                                                               sticky=tk.W,
                                                                                                               pady=1)
-            ttk.Checkbutton(self.random_params_frame, text="包含特殊符号", variable=self.string_symbols_var).grid(row=4,
+            ttk.Checkbutton(self.random_params_frame, text="Include Symbols", variable=self.string_symbols_var).grid(row=4,
                                                                                                             column=0,
                                                                                                             sticky=tk.W,
                                                                                                             pady=1)
 
         elif gen_type == "password":
-            ttk.Label(self.random_params_frame, text="长度:").grid(row=0, column=0, sticky=tk.W, pady=2)
+            ttk.Label(self.random_params_frame, text="Length:").grid(row=0, column=0, sticky=tk.W, pady=2)
             self.password_length_var = tk.StringVar(value="16")
             ttk.Entry(self.random_params_frame, textvariable=self.password_length_var, width=10).grid(row=0, column=1,
                                                                                                       sticky=tk.W,
                                                                                                       pady=2)
 
         elif gen_type == "number":
-            ttk.Label(self.random_params_frame, text="最小值:").grid(row=0, column=0, sticky=tk.W, pady=2)
+            ttk.Label(self.random_params_frame, text="Min Value:").grid(row=0, column=0, sticky=tk.W, pady=2)
             self.number_min_var = tk.StringVar(value="0")
             ttk.Entry(self.random_params_frame, textvariable=self.number_min_var, width=10).grid(row=0, column=1,
                                                                                                  sticky=tk.W, pady=2)
 
-            ttk.Label(self.random_params_frame, text="最大值:").grid(row=1, column=0, sticky=tk.W, pady=2)
+            ttk.Label(self.random_params_frame, text="Max Value:").grid(row=1, column=0, sticky=tk.W, pady=2)
             self.number_max_var = tk.StringVar(value="100")
             ttk.Entry(self.random_params_frame, textvariable=self.number_max_var, width=10).grid(row=1, column=1,
                                                                                                  sticky=tk.W, pady=2)
 
             self.number_float_var = tk.BooleanVar(value=False)
-            ttk.Checkbutton(self.random_params_frame, text="浮点数", variable=self.number_float_var).grid(row=2, column=0,
+            ttk.Checkbutton(self.random_params_frame, text="Float", variable=self.number_float_var).grid(row=2, column=0,
                                                                                                        sticky=tk.W,
                                                                                                        pady=1)
     
     def select_format_file(self):
-        """选择格式化文件"""
+        """Select file to format"""
         filename = filedialog.askopenfilename(
-            title="选择要格式化的文件",
+            title="Select File to Format",
             filetypes=[("Python files", "*.py"), ("JavaScript files", "*.js"), ("All files", "*.*")]
         )
         if filename:
             self.format_file_var.set(filename)
     
     def select_lint_file(self):
-        """选择检查文件"""
+        """Select file to check"""
         filename = filedialog.askopenfilename(
-            title="选择要检查的文件",
+            title="Select File to Check",
             filetypes=[("Python files", "*.py"), ("All files", "*.*")]
         )
         if filename:
@@ -503,16 +503,16 @@ class DevKitZeroGUI:
 
 
     def display_result(self, result: str):
-        """显示结果"""
+        """Show result"""
         self.result_text.delete(1.0, tk.END)
         self.result_text.insert(1.0, result)
     
     def display_error(self, error: str):
-        """显示错误"""
-        messagebox.showerror("错误", error)
+        """Show error"""
+        messagebox.showerror("Error", error)
     
     def run_formatter(self):
-        """运行代码格式化"""
+        """Run code formatter"""
         try:
             language = self.format_lang_var.get()
             input_type = self.format_input_type.get()
@@ -520,12 +520,12 @@ class DevKitZeroGUI:
             if input_type == "file":
                 file_path = self.format_file_var.get().strip()
                 if not file_path:
-                    raise ValueError("请选择要格式化的文件")
+                    raise ValueError("Please select a file to format")
                 result = formatter.format_file(file_path, language)
             else:
                 code = self.format_code_text.get(1.0, tk.END).strip()
                 if not code:
-                    raise ValueError("请输入要格式化的代码")
+                    raise ValueError("Please enter code to format")
                 result = formatter.format_code(code, language)
             
             self.display_result(result)
@@ -534,7 +534,7 @@ class DevKitZeroGUI:
             self.display_error(str(e))
     
     def run_random_gen(self):
-        """运行随机数据生成"""
+        """Run random data generation"""
         try:
             gen_type = self.random_type_var.get()
             
@@ -562,7 +562,7 @@ class DevKitZeroGUI:
             elif gen_type == "color":
                 result = random_gen.generate_random_hex_color()
             else:
-                raise ValueError(f"不支持的生成类型: {gen_type}")
+                raise ValueError(f"Unsupported generation type: {gen_type}")
             
             self.display_result(result)
             
@@ -570,32 +570,32 @@ class DevKitZeroGUI:
             self.display_error(str(e))
     
     def run_diff_tool(self):
-        """运行文本差异对比"""
+        """Run text diff comparison"""
         try:
             text1 = self.diff_text1.get(1.0, tk.END).strip()
             text2 = self.diff_text2.get(1.0, tk.END).strip()
             
             if not text1 or not text2:
-                raise ValueError("请输入两段要对比的文本")
+                raise ValueError("Please enter two texts to compare")
             
             format_type = self.diff_format_var.get()
             
             if format_type == "unified":
-                result = diff_tool.compare_texts(text1, text2)
-                result_text = ''.join(result)
+                result = diff_tool.compare_text(text1, text2)
+                result_text = result
             elif format_type == "side-by-side":
                 result = diff_tool.get_side_by_side_diff(text1, text2)
                 result_text = '\n'.join(result)
             elif format_type == "stats":
                 stats = diff_tool.analyze_changes(text1, text2)
-                result_text = f"""变化统计:
-文本1行数: {stats['total_lines_1']}
-文本2行数: {stats['total_lines_2']}
-新增行数: {stats['additions']}
-删除行数: {stats['deletions']}
-修改行数: {stats['modifications']}
-相似度: {stats['similarity']:.2%}
-总变更数: {stats['total_changes']}"""
+                result_text = f"""Change Statistics:
+Text 1 Lines: {stats['total_lines_1']}
+Text 2 Lines: {stats['total_lines_2']}
+Added Lines: {stats['additions']}
+Deleted Lines: {stats['deletions']}
+Modified Lines: {stats['modifications']}
+Similarity: {stats['similarity']:.2%}
+Total Changes: {stats['total_changes']}"""
             
             self.display_result(result_text)
             
@@ -603,21 +603,21 @@ class DevKitZeroGUI:
             self.display_error(str(e))
     
     def run_converter(self):
-        """运行数据格式转换"""
+        """Run data format conversion"""
         try:
             from_format = self.convert_from_var.get()
             to_format = self.convert_to_var.get()
             input_data = self.convert_input_text.get(1.0, tk.END).strip()
             
             if not input_data:
-                raise ValueError("请输入要转换的数据")
+                raise ValueError("Please enter data to convert")
             
             if from_format == "json" and to_format == "csv":
                 result = converter.json_to_csv(input_data)
             elif from_format == "csv" and to_format == "json":
                 result = converter.csv_to_json(input_data)
             else:
-                raise ValueError(f"不支持从 {from_format} 转换到 {to_format}")
+                raise ValueError(f"Conversion from {from_format} to {to_format} is not supported")
             
             self.display_result(result)
             
@@ -625,19 +625,19 @@ class DevKitZeroGUI:
             self.display_error(str(e))
     
     def run_linter(self):
-        """运行代码静态检查"""
+        """Run static code analysis"""
         try:
             input_type = self.lint_input_type.get()
             
             if input_type == "file":
                 file_path = self.lint_file_var.get().strip()
                 if not file_path:
-                    raise ValueError("请选择要检查的文件")
+                    raise ValueError("Please select a file to check")
                 issues = linter.lint_file(file_path)
             else:
                 code = self.lint_code_text.get(1.0, tk.END).strip()
                 if not code:
-                    raise ValueError("请输入要检查的代码")
+                    raise ValueError("Please enter code to check")
                 issues = linter.lint_code(code)
             
             result = linter.format_issues(issues)
@@ -647,42 +647,42 @@ class DevKitZeroGUI:
             self.display_error(str(e))
     
     def run_unused_func_detector(self):
-        """运行未使用函数检测"""
+        """Run unused function detection"""
         try:
             from pathlib import Path
             
-            # 获取参数
+            # Get parameters
             project_path = self.unused_func_path_var.get().strip()
             if not project_path:
-                raise ValueError("请选择要分析的项目目录")
+                raise ValueError("Please select a project directory to analyze")
             
             project_path = Path(project_path).resolve()
             if not project_path.exists():
-                raise ValueError(f"项目路径不存在: {project_path}")
+                raise ValueError(f"Project path does not exist: {project_path}")
             
             if not project_path.is_dir():
-                raise ValueError(f"路径不是目录: {project_path}")
+                raise ValueError(f"Path is not a directory: {project_path}")
             
-            # 解析排除目录
+            # Parse exclude directories
             exclude_text = self.unused_func_exclude_var.get().strip()
             exclude_dirs = [d.strip() for d in exclude_text.split(',') if d.strip()] if exclude_text else None
             
-            # 显示进度信息
-            self.display_result("正在分析项目，请稍候...\n")
+            # Show progress info
+            self.display_result("Analyzing project, please wait...\n")
             self.root.update()
             
-            # 检测未使用的函数
+            # Detect unused functions
             if self.unused_func_verbose_var.get():
-                progress_msg = f"扫描项目: {project_path}\n"
+                progress_msg = f"Scanning project: {project_path}\n"
                 if exclude_dirs:
-                    progress_msg += f"排除目录: {', '.join(exclude_dirs)}\n"
-                progress_msg += "\n分析中...\n"
+                    progress_msg += f"Exclude dirs: {', '.join(exclude_dirs)}\n"
+                progress_msg += "\nAnalyzing...\n"
                 self.display_result(progress_msg)
                 self.root.update()
             
             unused_functions = unused_func_detector.detect_unused_functions(project_path, exclude_dirs)
             
-            # 生成报告
+            # Generate report
             output_format = self.unused_func_format_var.get()
             if output_format == 'json':
                 result = unused_func_detector.format_json_report(unused_functions)
@@ -697,7 +697,7 @@ class DevKitZeroGUI:
             self.display_error(str(e))
     
     def run(self):
-        """运行 GUI 应用程序"""
+        """Run GUI Application"""
         try:
             self.root.mainloop()
         except KeyboardInterrupt:
@@ -705,12 +705,12 @@ class DevKitZeroGUI:
     
 
     def setup_port_checker_ui(self):
-        """设置端口检查工具界面"""
+        """Setup Port Checker UI"""
         import tkinter as tk
         from tkinter import ttk
 
-        # 操作类型
-        ttk.Label(self.control_container, text="操作类型:").grid(row=0, column=0, sticky=tk.W, pady=2)
+        # Action Type
+        ttk.Label(self.control_container, text="Action Type:").grid(row=0, column=0, sticky=tk.W, pady=2)
         self.port_action_var = tk.StringVar(value="check")
         action_combo = ttk.Combobox(
             self.control_container,
@@ -721,21 +721,21 @@ class DevKitZeroGUI:
         action_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=2)
         action_combo.bind("<<ComboboxSelected>>", lambda e: self.update_port_params_ui())
 
-        # 参数区容器
+        # Parameter Area Container
         self.port_params_frame = ttk.Frame(self.control_container)
         self.port_params_frame.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=(6, 6))
         self.port_params_frame.columnconfigure(1, weight=1)
 
-        # 执行按钮
-        self.port_run_btn = ttk.Button(self.control_container, text="执行", command=self.run_port_checker)
+        # Execute Button
+        self.port_run_btn = ttk.Button(self.control_container, text="Execute", command=self.run_port_checker)
         self.port_run_btn.grid(row=2, column=0, columnspan=2, pady=(10, 0))
 
-        # 初始参数区
+        # Initial Parameter Area
         self.update_port_params_ui()
         self.control_container.columnconfigure(1, weight=1)
 
     def update_port_params_ui(self):
-        """根据操作类型刷新参数表单"""
+        """Refresh parameter form based on action type"""
         import tkinter as tk
         from tkinter import ttk
         for w in self.port_params_frame.winfo_children():
@@ -744,49 +744,49 @@ class DevKitZeroGUI:
         action = self.port_action_var.get()
         if action == "check":
             # host
-            ttk.Label(self.port_params_frame, text="主机:").grid(row=0, column=0, sticky=tk.W, pady=2)
+            ttk.Label(self.port_params_frame, text="Host:").grid(row=0, column=0, sticky=tk.W, pady=2)
             self.port_host_var = tk.StringVar(value="localhost")
             ttk.Entry(self.port_params_frame, textvariable=self.port_host_var).grid(row=0, column=1,
                                                                                     sticky=(tk.W, tk.E), pady=2)
 
             # port
-            ttk.Label(self.port_params_frame, text="端口:").grid(row=1, column=0, sticky=tk.W, pady=2)
+            ttk.Label(self.port_params_frame, text="Port:").grid(row=1, column=0, sticky=tk.W, pady=2)
             self.port_port_var = tk.StringVar(value="8080")
             ttk.Entry(self.port_params_frame, textvariable=self.port_port_var).grid(row=1, column=1,
                                                                                     sticky=(tk.W, tk.E), pady=2)
 
             # timeout
-            ttk.Label(self.port_params_frame, text="超时(秒):").grid(row=2, column=0, sticky=tk.W, pady=2)
+            ttk.Label(self.port_params_frame, text="Timeout (s):").grid(row=2, column=0, sticky=tk.W, pady=2)
             self.port_timeout_var = tk.StringVar(value="3")
             ttk.Entry(self.port_params_frame, textvariable=self.port_timeout_var).grid(row=2, column=1,
                                                                                        sticky=(tk.W, tk.E), pady=2)
 
         elif action == "scan":
             # host
-            ttk.Label(self.port_params_frame, text="主机:").grid(row=0, column=0, sticky=tk.W, pady=2)
+            ttk.Label(self.port_params_frame, text="Host:").grid(row=0, column=0, sticky=tk.W, pady=2)
             self.scan_host_var = tk.StringVar(value="localhost")
             ttk.Entry(self.port_params_frame, textvariable=self.scan_host_var).grid(row=0, column=1,
                                                                                     sticky=(tk.W, tk.E), pady=2)
 
             # start
-            ttk.Label(self.port_params_frame, text="起始端口:").grid(row=1, column=0, sticky=tk.W, pady=2)
+            ttk.Label(self.port_params_frame, text="Start Port:").grid(row=1, column=0, sticky=tk.W, pady=2)
             self.scan_start_var = tk.StringVar(value="1")
             ttk.Entry(self.port_params_frame, textvariable=self.scan_start_var).grid(row=1, column=1,
                                                                                      sticky=(tk.W, tk.E), pady=2)
 
             # end
-            ttk.Label(self.port_params_frame, text="结束端口:").grid(row=2, column=0, sticky=tk.W, pady=2)
+            ttk.Label(self.port_params_frame, text="End Port:").grid(row=2, column=0, sticky=tk.W, pady=2)
             self.scan_end_var = tk.StringVar(value="1000")
             ttk.Entry(self.port_params_frame, textvariable=self.scan_end_var).grid(row=2, column=1, sticky=(tk.W, tk.E),
                                                                                    pady=2)
 
         else:  # list
-            ttk.Label(self.port_params_frame, text="操作说明：显示常见端口及服务名，无需参数").grid(
+            ttk.Label(self.port_params_frame, text="Note: Shows common ports and services, no params needed.").grid(
                 row=0, column=0, columnspan=2, sticky=tk.W, pady=2
             )
 
     def run_port_checker(self):
-        """运行端口检查"""
+        """Run Port Checker"""
         try:
             action = self.port_action_var.get()
             if action == "check":
@@ -801,13 +801,13 @@ class DevKitZeroGUI:
                 start = int(self.scan_start_var.get())
                 end = int(self.scan_end_var.get())
                 if end <= start:
-                    raise ValueError("结束端口必须大于起始端口")
+                    raise ValueError("End port must be greater than start port")
                 results = port_checker.scan_ports(host, start, end)
                 text = port_checker.format_scan_results(results)
 
             else:  # list
                 common = port_checker.get_common_ports()
-                lines = ["常见端口列表:\n"]
+                lines = ["Common Ports List:\n"]
                 for p in sorted(common):
                     lines.append(f"  {p:>5}  - {common[p]}")
                 text = "\n".join(lines)
@@ -821,50 +821,50 @@ class DevKitZeroGUI:
         import tkinter as tk
         from tkinter import ttk
 
-        # ===== 顶部：输出格式 =====
-        ttk.Label(self.control_container, text="输出格式:").grid(row=0, column=0, sticky=tk.W, pady=2)
+        # ===== Top: Output Format =====
+        ttk.Label(self.control_container, text="Output Format:").grid(row=0, column=0, sticky=tk.W, pady=2)
         self.api_fmt_var = tk.StringVar(value="text")
         ttk.Combobox(self.control_container, textvariable=self.api_fmt_var,
                      values=["text", "json", "md"], state="readonly") \
             .grid(row=0, column=1, sticky=(tk.W, tk.E), pady=2)
 
-        # ===== 契约 v1 =====
-        ttk.Label(self.control_container, text="契约 v1:").grid(row=1, column=0, sticky=tk.W, pady=(8, 2))
-        ttk.Button(self.control_container, text="从文件加载",
+        # ===== Contract v1 =====
+        ttk.Label(self.control_container, text="Contract v1:").grid(row=1, column=0, sticky=tk.W, pady=(8, 2))
+        ttk.Button(self.control_container, text="Load from File",
                    command=lambda: self.load_contract_from_file("v1")) \
             .grid(row=1, column=1, sticky=tk.E, pady=(8, 2))
 
-        # 说明小字（灰色）
+        # Small description text (gray)
         tk.Label(self.control_container,
-                 text="支持：简化契约 JSON 或 OpenAPI JSON",
+                 text="Supports: Simplified Contract JSON or OpenAPI JSON",
                  fg="#666").grid(row=2, column=0, columnspan=2, sticky=tk.W, pady=(0, 6))
 
-        # v1 文本框（行号顺延）
+        # v1 text box (line number continues)
         self.api_old_text = tk.Text(self.control_container, height=12)
         self.api_old_text.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E))
 
-        # ===== 契约 v2 =====
-        ttk.Label(self.control_container, text="契约 v2:").grid(row=4, column=0, sticky=tk.W, pady=(8, 2))
-        ttk.Button(self.control_container, text="从文件加载",
+        # ===== Contract v2 =====
+        ttk.Label(self.control_container, text="Contract v2:").grid(row=4, column=0, sticky=tk.W, pady=(8, 2))
+        ttk.Button(self.control_container, text="Load from File",
                    command=lambda: self.load_contract_from_file("v2")) \
             .grid(row=4, column=1, sticky=tk.E, pady=(8, 2))
 
-        # 说明小字（灰色）
+        # Small description text (gray)
         tk.Label(self.control_container,
-                 text="支持：简化契约 JSON 或 OpenAPI JSON",
+                 text="Supports: Simplified Contract JSON or OpenAPI JSON",
                  fg="#666").grid(row=5, column=0, columnspan=2, sticky=tk.W, pady=(0, 6))
 
-        # v2 文本框（行号顺延）
+        # v2 text box (line number continues)
         self.api_new_text = tk.Text(self.control_container, height=12)
         self.api_new_text.grid(row=6, column=0, columnspan=2, sticky=(tk.W, tk.E))
 
-        # ===== 操作区 =====
-        ttk.Button(self.control_container, text="对比契约", command=self.run_api_diff) \
+        # ===== Operation Area =====
+        ttk.Button(self.control_container, text="Compare Contracts", command=self.run_api_diff) \
             .grid(row=7, column=0, columnspan=2, pady=(10, 0))
-        ttk.Button(self.control_container, text="填充示例", command=self.fill_demo_api_diff) \
+        ttk.Button(self.control_container, text="Fill Example", command=self.fill_demo_api_diff) \
             .grid(row=8, column=0, columnspan=2, pady=(6, 0))
 
-        # 右侧列可伸缩
+        # Right column expandable
         self.control_container.columnconfigure(1, weight=1)
 
     '''
@@ -872,33 +872,33 @@ class DevKitZeroGUI:
         import tkinter as tk
         from tkinter import ttk
 
-        # 输出格式
-        ttk.Label(self.control_container, text="输出格式:").grid(row=0, column=0, sticky=tk.W, pady=2)
+        # Output Format
+        ttk.Label(self.control_container, text="Output Format:").grid(row=0, column=0, sticky=tk.W, pady=2)
         self.api_fmt_var = tk.StringVar(value="text")
         ttk.Combobox(self.control_container, textvariable=self.api_fmt_var,
                     values=["text", "json", "md"], state="readonly")\
             .grid(row=0, column=1, sticky=(tk.W, tk.E), pady=2)
 
-        # 契约 v1
-        ttk.Label(self.control_container, text="契约 v1:").grid(row=1, column=0, sticky=tk.W, pady=(8, 2))
-        ttk.Button(self.control_container, text="从文件加载",
+        # Contract v1
+        ttk.Label(self.control_container, text="Contract v1:").grid(row=1, column=0, sticky=tk.W, pady=(8, 2))
+        ttk.Button(self.control_container, text="Load from File",
                 command=lambda: self.load_contract_from_file("v1"))\
             .grid(row=1, column=1, sticky=tk.E, pady=(8, 2))
         self.api_old_text = tk.Text(self.control_container, height=12)
         self.api_old_text.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E))
 
-        # 契约 v2
-        ttk.Label(self.control_container, text="契约 v2:").grid(row=3, column=0, sticky=tk.W, pady=(8, 2))
-        ttk.Button(self.control_container, text="从文件加载",
+        # Contract v2
+        ttk.Label(self.control_container, text="Contract v2:").grid(row=3, column=0, sticky=tk.W, pady=(8, 2))
+        ttk.Button(self.control_container, text="Load from File",
                 command=lambda: self.load_contract_from_file("v2"))\
             .grid(row=3, column=1, sticky=tk.E, pady=(8, 2))
         self.api_new_text = tk.Text(self.control_container, height=12)
         self.api_new_text.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E))
 
-        # 操作区
-        ttk.Button(self.control_container, text="对比契约", command=self.run_api_diff)\
+        # Operation Area
+        ttk.Button(self.control_container, text="Compare Contracts", command=self.run_api_diff)\
             .grid(row=5, column=0, columnspan=2, pady=(10, 0))
-        ttk.Button(self.control_container, text="填充示例", command=self.fill_demo_api_diff)\
+        ttk.Button(self.control_container, text="Fill Example", command=self.fill_demo_api_diff)\
             .grid(row=6, column=0, columnspan=2, pady=(6, 0))
 
         self.control_container.columnconfigure(1, weight=1)
@@ -908,31 +908,31 @@ class DevKitZeroGUI:
         import json
         from tkinter import filedialog
         path = filedialog.askopenfilename(
-            title="选择契约 JSON 文件",
-            filetypes=[("JSON 文件", "*.json"), ("所有文件", "*.*")]
+            title="Select Contract JSON File",
+            filetypes=[("JSON Files", "*.json"), ("All Files", "*.*")]
         )
         if not path:
             return
         try:
             with open(path, "r", encoding="utf-8") as f:
                 raw = f.read()
-            # 提前校验 JSON，便于在 GUI 里给出明确信息
+            # Pre-validate JSON to give clear info in GUI
             json.loads(raw)
         except Exception as e:
-            self.display_error(f"读取/解析失败：{e}")
+            self.display_error(f"Read/Parse failed: {e}")
             return
 
         widget = self.api_old_text if target == "v1" else self.api_new_text
         widget.delete("1.0", "end")
         widget.insert("1.0", raw)
-        self.display_result(f"已加载：{path}")
+        self.display_result(f"Loaded: {path}")
 
     def run_api_diff(self):
         try:
             old_text = self.api_old_text.get("1.0", "end").strip()
             new_text = self.api_new_text.get("1.0", "end").strip()
             if not old_text or not new_text:
-                raise ValueError("请分别在“契约 v1 / 契约 v2”填入 JSON 文本或点击“从文件加载”")
+                raise ValueError("Please fill in JSON text in 'Contract v1 / Contract v2' or click 'Load from File'")
             old = api_contract_diff.parse_contract(text=old_text)
             new = api_contract_diff.parse_contract(text=new_text)
             report = api_contract_diff.compare_contracts(old, new)
@@ -1002,15 +1002,15 @@ class DevKitZeroGUI:
         self.api_new_text.delete("1.0", "end");
         self.api_new_text.insert("1.0", demo_v2)
 
-    # ========== 正则表达式测试工具 ==========
+    # ========== Regex Tester Tool ==========
     def setup_regex_tester_ui(self):
-        """设置正则表达式测试工具界面"""
-        # 控制面板 - 正则相关控件
+        """Setup Regex Tester UI"""
+        # Control Panel - Regex related controls
         control_frame = ttk.Frame(self.control_container)
         control_frame.pack(fill=tk.BOTH, expand=True)
 
-        # 常用模式选择
-        ttk.Label(control_frame, text="常用模式:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        # Common Pattern Selection
+        ttk.Label(control_frame, text="Common Patterns:").grid(row=0, column=0, sticky=tk.W, pady=5)
         self.pattern_var = tk.StringVar()
         self.common_patterns_combo = ttk.Combobox(
             control_frame,
@@ -1019,93 +1019,93 @@ class DevKitZeroGUI:
             state="readonly",
             width=30
         )
-        self.common_patterns_combo.set("选择常用模式...")
+        self.common_patterns_combo.set("Select Common Pattern...")
         self.common_patterns_combo.grid(row=0, column=1, sticky=tk.EW, pady=5, padx=(5, 0))
         self.common_patterns_combo.bind('<<ComboboxSelected>>', self.on_pattern_selected)
 
-        # 自定义模式输入
-        ttk.Label(control_frame, text="自定义模式:").grid(row=1, column=0, sticky=tk.NW, pady=5)
+        # Custom Pattern Input
+        ttk.Label(control_frame, text="Custom Pattern:").grid(row=1, column=0, sticky=tk.NW, pady=5)
         self.pattern_entry = scrolledtext.ScrolledText(control_frame, width=40, height=3)
         self.pattern_entry.grid(row=1, column=1, sticky=tk.EW, pady=5, padx=(5, 0))
 
-        # 选项框架
-        options_frame = ttk.LabelFrame(control_frame, text="选项", padding=5)
+        # Options Frame
+        options_frame = ttk.LabelFrame(control_frame, text="Options", padding=5)
         options_frame.grid(row=2, column=1, sticky=tk.EW, pady=5, padx=(5, 0))
 
-        # 正则标志
+        # Regex Flags
         self.ignore_case_var = tk.BooleanVar()
         ttk.Checkbutton(
             options_frame,
-            text="忽略大小写 (re.IGNORECASE)",
+            text="Ignore Case (re.IGNORECASE)",
             variable=self.ignore_case_var
         ).pack(anchor=tk.W)
 
         self.multiline_var = tk.BooleanVar()
         ttk.Checkbutton(
             options_frame,
-            text="多行模式 (re.MULTILINE)",
+            text="Multiline (re.MULTILINE)",
             variable=self.multiline_var
         ).pack(anchor=tk.W)
 
         self.dotall_var = tk.BooleanVar()
         ttk.Checkbutton(
             options_frame,
-            text="点匹配换行 (re.DOTALL)",
+            text="Dot Matches All (re.DOTALL)",
             variable=self.dotall_var
         ).pack(anchor=tk.W)
 
-        # 测试文本区域
-        ttk.Label(control_frame, text="测试文本:").grid(row=3, column=0, sticky=tk.NW, pady=5)
+        # Test Text Area
+        ttk.Label(control_frame, text="Test Text:").grid(row=3, column=0, sticky=tk.NW, pady=5)
         self.text_area = scrolledtext.ScrolledText(control_frame, width=40, height=10)
         self.text_area.grid(row=3, column=1, sticky=tk.NSEW, pady=5, padx=(5, 0))
 
-        # 按钮区域
+        # Button Area
         button_frame = ttk.Frame(control_frame)
         button_frame.grid(row=4, column=0, columnspan=2, sticky=tk.EW, pady=10)
 
         self.test_button = ttk.Button(
             button_frame,
-            text="测试正则",
+            text="Test Regex",
             command=self.test_regex
         )
         self.test_button.pack(side=tk.LEFT, padx=(0, 10))
 
         self.clear_button = ttk.Button(
             button_frame,
-            text="清空所有",
+            text="Clear All",
             command=self.clear_all_regex
         )
         self.clear_button.pack(side=tk.LEFT, padx=(0, 10))
 
         self.copy_result_button = ttk.Button(
             button_frame,
-            text="复制结果",
+            text="Copy Result",
             command=self.copy_regex_results
         )
         self.copy_result_button.pack(side=tk.LEFT)
 
-        # 配置权重
+        # Configure Weights
         control_frame.columnconfigure(1, weight=1)
         control_frame.rowconfigure(3, weight=1)
 
-        # 设置快捷键
+        # Setup Shortcuts
         self.text_area.bind('<Control-Return>', lambda e: self.test_regex())
         self.pattern_entry.bind('<Control-Return>', lambda e: self.test_regex())
 
-        # 结果面板 - 正则测试结果
+        # Result Panel - Regex Test Results
         result_frame = ttk.Frame(self.result_container)
         result_frame.pack(fill=tk.BOTH, expand=True)
 
-        # 匹配统计
+        # Match Statistics
         stats_frame = ttk.Frame(result_frame)
         stats_frame.pack(fill=tk.X, pady=(0, 10))
-        self.stats_label = ttk.Label(stats_frame, text="匹配结果: 0 个匹配", font=('Arial', 10, 'bold'))
+        self.stats_label = ttk.Label(stats_frame, text="Match Result: 0 matches", font=('Arial', 10, 'bold'))
         self.stats_label.pack(side=tk.LEFT)
-        self.pattern_status_label = ttk.Label(stats_frame, text="模式状态: 未测试", foreground="gray")
+        self.pattern_status_label = ttk.Label(stats_frame, text="Pattern Status: Untested", foreground="gray")
         self.pattern_status_label.pack(side=tk.RIGHT)
 
-        # 匹配详情
-        ttk.Label(result_frame, text="匹配详情:").pack(anchor=tk.W, pady=(0, 5))
+        # Match Details
+        ttk.Label(result_frame, text="Match Details:").pack(anchor=tk.W, pady=(0, 5))
         self.matches_text = scrolledtext.ScrolledText(
             result_frame,
             width=60,
@@ -1114,8 +1114,8 @@ class DevKitZeroGUI:
         )
         self.matches_text.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
 
-        # 替换结果显示
-        replace_frame = ttk.LabelFrame(result_frame, text="替换结果", padding=5)
+        # Replacement Result Display
+        replace_frame = ttk.LabelFrame(result_frame, text="Replacement Result", padding=5)
         replace_frame.pack(fill=tk.X)
         self.replace_text = scrolledtext.ScrolledText(
             replace_frame,
@@ -1126,7 +1126,7 @@ class DevKitZeroGUI:
         self.replace_text.pack(fill=tk.BOTH, expand=True)
 
     def on_pattern_selected(self, event):
-        """选择常用模式时的回调"""
+        """Callback when common pattern is selected"""
         pattern_name = self.pattern_var.get()
         common_patterns = self.regex_tester.get_common_patterns()
 
@@ -1135,19 +1135,19 @@ class DevKitZeroGUI:
             self.pattern_entry.insert(1.0, common_patterns[pattern_name])
 
     def test_regex(self):
-        """测试正则表达式"""
+        """Test Regex"""
         pattern = self.pattern_entry.get(1.0, tk.END).strip()
         text = self.text_area.get(1.0, tk.END)
 
         if not pattern:
-            messagebox.showerror("错误", "请输入正则表达式模式")
+            messagebox.showerror("Error", "Please enter regex pattern")
             return
 
         if not text.strip():
-            messagebox.showwarning("警告", "请输入测试文本")
+            messagebox.showwarning("Warning", "Please enter test text")
             return
 
-        # 计算标志
+        # Calculate flags
         flags = 0
         if self.ignore_case_var.get():
             flags |= re.IGNORECASE
@@ -1156,64 +1156,64 @@ class DevKitZeroGUI:
         if self.dotall_var.get():
             flags |= re.DOTALL
 
-        # 测试正则
+        # Test regex
         result = self.regex_tester.test_pattern(pattern, text, flags)
 
-        # 显示结果
+        # Display results
         self.display_regex_results(result)
 
     def display_regex_results(self, result):
-        """显示匹配结果"""
-        # 更新统计
+        """Display match results"""
+        # Update statistics
         if result['success']:
             self.stats_label.config(
-                text=f"匹配结果: {result['match_count']} 个匹配",
+                text=f"Match Result: {result['match_count']} matches",
                 foreground="green"
             )
             self.pattern_status_label.config(
-                text="模式状态: 有效",
+                text="Pattern Status: Valid",
                 foreground="green"
             )
         else:
             self.stats_label.config(
-                text=f"错误: {result['error']}",
+                text=f"Error: {result['error']}",
                 foreground="red"
             )
             self.pattern_status_label.config(
-                text="模式状态: 无效",
+                text="Pattern Status: Invalid",
                 foreground="red"
             )
 
-        # 更新匹配详情
+        # Update Match Details
         self.matches_text.config(state=tk.NORMAL)
         self.matches_text.delete(1.0, tk.END)
 
         if result['success'] and result['match_count'] > 0:
             for i, match in enumerate(result['matches'], 1):
-                self.matches_text.insert(tk.END, f"匹配 {i}:\n")
-                self.matches_text.insert(tk.END, f"  位置: {match['start']}-{match['end']}\n")
-                self.matches_text.insert(tk.END, f"  值: {match['group']}\n")
+                self.matches_text.insert(tk.END, f"Match {i}:\n")
+                self.matches_text.insert(tk.END, f"  Position: {match['start']}-{match['end']}\n")
+                self.matches_text.insert(tk.END, f"  Value: {match['group']}\n")
 
                 if match['groups']:
-                    self.matches_text.insert(tk.END, "  分组:\n")
+                    self.matches_text.insert(tk.END, "  Groups:\n")
                     for j, group in enumerate(match['groups'], 1):
-                        self.matches_text.insert(tk.END, f"    分组 {j}: {group}\n")
+                        self.matches_text.insert(tk.END, f"    Group {j}: {group}\n")
                 self.matches_text.insert(tk.END, "\n")
         elif result['success']:
-            self.matches_text.insert(tk.END, "未找到匹配。")
+            self.matches_text.insert(tk.END, "No matches found.")
         else:
-            self.matches_text.insert(tk.END, f"模式错误: {result['error']}")
+            self.matches_text.insert(tk.END, f"Pattern Error: {result['error']}")
 
         self.matches_text.config(state=tk.DISABLED)
 
-        # 更新替换文本
+        # Update Replacement Text
         self.replace_text.config(state=tk.NORMAL)
         self.replace_text.delete(1.0, tk.END)
         self.replace_text.insert(tk.END, result['replaced_text'])
         self.replace_text.config(state=tk.DISABLED)
 
     def clear_all_regex(self):
-        """清空所有输入和结果"""
+        """Clear all inputs and results"""
         self.pattern_entry.delete(1.0, tk.END)
         self.text_area.delete(1.0, tk.END)
         self.matches_text.config(state=tk.NORMAL)
@@ -1222,142 +1222,142 @@ class DevKitZeroGUI:
         self.replace_text.config(state=tk.NORMAL)
         self.replace_text.delete(1.0, tk.END)
         self.replace_text.config(state=tk.DISABLED)
-        self.stats_label.config(text="匹配结果: 0 个匹配", foreground="black")
-        self.pattern_status_label.config(text="模式状态: 未测试", foreground="gray")
-        self.common_patterns_combo.set("选择常用模式...")
+        self.stats_label.config(text="Match Result: 0 matches", foreground="black")
+        self.pattern_status_label.config(text="Pattern Status: Untested", foreground="gray")
+        self.common_patterns_combo.set("Select Common Pattern...")
         self.ignore_case_var.set(False)
         self.multiline_var.set(False)
         self.dotall_var.set(False)
 
     def copy_regex_results(self):
-        """复制正则测试结果到剪贴板"""
+        """Copy regex results to clipboard"""
         self.root.clipboard_clear()
         results = self.matches_text.get(1.0, tk.END).strip()
         self.root.clipboard_append(results)
-        messagebox.showinfo("已复制", "结果已复制到剪贴板")
+        messagebox.showinfo("Copied", "Results copied to clipboard")
 
-    # ========== Robots检查器 ==========
+    # ========== Robots Checker ==========
     def setup_robots_checker_ui(self):
-        """设置Robots检查器界面"""
-        # 控制面板 - robots检查器相关控件
+        """Setup Robots Checker UI"""
+        # Control Panel - Robots Checker related controls
         control_frame = ttk.Frame(self.control_container)
         control_frame.pack(fill=tk.BOTH, expand=True)
 
-        # URL输入
-        ttk.Label(control_frame, text="网站URL:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        # URL Input
+        ttk.Label(control_frame, text="Website URL:").grid(row=0, column=0, sticky=tk.W, pady=5)
         self.robots_url_entry = ttk.Entry(control_frame, width=40)
         self.robots_url_entry.grid(row=0, column=1, sticky=tk.EW, pady=5, padx=(5, 0))
-        self.robots_url_entry.insert(0, "https://")  # 默认前缀
+        self.robots_url_entry.insert(0, "https://")  # Default Prefix
 
-        # 选项框架
-        options_frame = ttk.LabelFrame(control_frame, text="选项", padding=5)
+        # Options Frame
+        options_frame = ttk.LabelFrame(control_frame, text="Options", padding=5)
         options_frame.grid(row=1, column=0, columnspan=2, sticky=tk.EW, pady=5)
 
-        # 超时设置
-        ttk.Label(options_frame, text="超时(秒):").grid(row=0, column=0, sticky=tk.W, padx=5)
+        # Timeout Settings
+        ttk.Label(options_frame, text="Timeout (s):").grid(row=0, column=0, sticky=tk.W, padx=5)
         self.robots_timeout_var = tk.StringVar(value="10")
         ttk.Entry(options_frame, textvariable=self.robots_timeout_var, width=10).grid(row=0, column=1, sticky=tk.W, padx=5)
 
-        # 原始输出选项
+        # Raw Output Options
         self.robots_raw_var = tk.BooleanVar()
         ttk.Checkbutton(
             options_frame,
-            text="显示原始robots.txt内容",
+            text="Show raw robots.txt content",
             variable=self.robots_raw_var
         ).grid(row=0, column=2, sticky=tk.W, padx=10)
 
-        # 按钮区域
+        # Button Area
         button_frame = ttk.Frame(control_frame)
         button_frame.grid(row=2, column=0, columnspan=2, sticky=tk.EW, pady=10)
 
         self.check_robots_button = ttk.Button(
             button_frame,
-            text="检查Robots规则",
+            text="Check Robots Rules",
             command=self.check_robots
         )
         self.check_robots_button.pack(side=tk.LEFT, padx=(0, 10))
 
         self.copy_robots_button = ttk.Button(
             button_frame,
-            text="复制结果",
+            text="Copy Result",
             command=self.copy_robots_results
         )
         self.copy_robots_button.pack(side=tk.LEFT)
 
-        # 配置权重
+        # Configure Weights
         control_frame.columnconfigure(1, weight=1)
         options_frame.columnconfigure(2, weight=1)
 
-        # 设置快捷键: Ctrl+Enter检查
+        # Setup Shortcut: Ctrl+Enter to check
         self.robots_url_entry.bind('<Control-Return>', lambda e: self.check_robots())
 
-        # 结果面板 - robots检查器结果
+        # Result Panel - Robots Checker Results
         result_frame = ttk.Frame(self.result_container)
         result_frame.pack(fill=tk.BOTH, expand=True)
 
-        # 状态栏
-        self.robots_status_label = ttk.Label(result_frame, text="状态: 就绪", font=('Arial', 10, 'bold'))
+        # Status Bar
+        self.robots_status_label = ttk.Label(result_frame, text="Status: Ready", font=('Arial', 10, 'bold'))
         self.robots_status_label.pack(anchor=tk.W, pady=(0, 5))
 
-        # Robots URL显示
+        # Robots URL Display
         self.robots_url_label = ttk.Label(result_frame, text="", foreground="blue")
         self.robots_url_label.pack(anchor=tk.W, pady=(0, 10))
 
-        # 结果笔记本(标签页)
+        # Result Notebook (Tabs)
         notebook = ttk.Notebook(result_frame)
         notebook.pack(fill=tk.BOTH, expand=True)
 
-        # 解析规则标签页
+        # Parsed Rules Tab
         self.robots_parsed_text = scrolledtext.ScrolledText(
             notebook,
             width=60,
             height=15,
             state=tk.DISABLED
         )
-        notebook.add(self.robots_parsed_text, text="解析规则")
+        notebook.add(self.robots_parsed_text, text="Parsed Rules")
 
-        # 原始内容标签页
+        # Raw Content Tab
         self.robots_raw_text = scrolledtext.ScrolledText(
             notebook,
             width=60,
             height=15,
             state=tk.DISABLED
         )
-        notebook.add(self.robots_raw_text, text="原始内容")
+        notebook.add(self.robots_raw_text, text="Raw Content")
 
     def check_robots(self):
-        """检查给定URL的robots.txt"""
+        """Check robots.txt for given URL"""
         url = self.robots_url_entry.get().strip()
 
         if not url:
-            messagebox.showerror("错误", "请输入网站URL")
+            messagebox.showerror("Error", "Please enter website URL")
             return
 
         try:
-            # 获取超时值
+            # Get timeout value
             timeout = int(self.robots_timeout_var.get())
 
-            # 更新状态
-            self.robots_status_label.config(text="状态: 检查中...", foreground="orange")
-            self.root.update()  # 强制UI更新
+            # Update status
+            self.robots_status_label.config(text="Status: Checking...", foreground="orange")
+            self.root.update()  # Force UI update
 
-            # 调用核心逻辑
+            # Call core logic
             result = robots_core_logic(url, timeout=timeout)
 
-            # 更新状态
+            # Update status
             self.robots_status_label.config(
-                text=f"状态: {result['message']}",
+                text=f"Status: {result['message']}",
                 foreground="green" if result['success'] else "red"
             )
             self.robots_url_label.config(text=result['url'])
 
-            # 显示原始内容
+            # Show raw content
             self.robots_raw_text.config(state=tk.NORMAL)
             self.robots_raw_text.delete(1.0, tk.END)
-            self.robots_raw_text.insert(1.0, result['content'] or "无可用内容")
+            self.robots_raw_text.insert(1.0, result['content'] or "No content available")
             self.robots_raw_text.config(state=tk.DISABLED)
 
-            # 显示解析规则(如果成功)
+            # Show parsed rules (if successful)
             self.robots_parsed_text.config(state=tk.NORMAL)
             self.robots_parsed_text.delete(1.0, tk.END)
 
@@ -1365,116 +1365,116 @@ class DevKitZeroGUI:
                 rules = result['rules']
 
                 if rules['host']:
-                    self.robots_parsed_text.insert(tk.END, f"主机: {rules['host']}\n\n")
+                    self.robots_parsed_text.insert(tk.END, f"Host: {rules['host']}\n\n")
 
                 if rules['crawl_delay']:
-                    self.robots_parsed_text.insert(tk.END, f"抓取延迟: {rules['crawl_delay']} 秒\n\n")
+                    self.robots_parsed_text.insert(tk.END, f"Crawl Delay: {rules['crawl_delay']} seconds\n\n")
 
                 if rules['sitemaps']:
-                    self.robots_parsed_text.insert(tk.END, "站点地图:\n")
+                    self.robots_parsed_text.insert(tk.END, "Sitemaps:\n")
                     for sitemap in rules['sitemaps']:
                         self.robots_parsed_text.insert(tk.END, f"- {sitemap}\n")
                     self.robots_parsed_text.insert(tk.END, "\n")
 
-                self.robots_parsed_text.insert(tk.END, "用户代理规则:\n")
+                self.robots_parsed_text.insert(tk.END, "User Agent Rules:\n")
                 for agent, agent_rules in rules['user_agents'].items():
-                    self.robots_parsed_text.insert(tk.END, f"\n用户代理: {agent}\n")
+                    self.robots_parsed_text.insert(tk.END, f"\nUser Agent: {agent}\n")
 
                     if agent_rules['allow']:
-                        self.robots_parsed_text.insert(tk.END, "  允许:\n")
+                        self.robots_parsed_text.insert(tk.END, "  Allow:\n")
                         for path in agent_rules['allow']:
                             self.robots_parsed_text.insert(tk.END, f"    - {path}\n")
 
                     if agent_rules['disallow']:
-                        self.robots_parsed_text.insert(tk.END, "  禁止:\n")
+                        self.robots_parsed_text.insert(tk.END, "  Disallow:\n")
                         for path in agent_rules['disallow']:
                             self.robots_parsed_text.insert(tk.END, f"    - {path}\n")
             else:
-                self.robots_parsed_text.insert(tk.END, "未找到有效的robots规则或无法解析内容。")
+                self.robots_parsed_text.insert(tk.END, "No valid robots rules found or content could not be parsed.")
 
             self.robots_parsed_text.config(state=tk.DISABLED)
 
         except ValueError as e:
-            self.robots_status_label.config(text=f"状态: 错误 - {str(e)}", foreground="red")
-            messagebox.showerror("错误", str(e))
+            self.robots_status_label.config(text=f"Status: Error - {str(e)}", foreground="red")
+            messagebox.showerror("Error", str(e))
         except Exception as e:
-            self.robots_status_label.config(text=f"状态: 错误 - {str(e)}", foreground="red")
-            messagebox.showerror("错误", f"检查robots规则失败: {str(e)}")
+            self.robots_status_label.config(text=f"Status: Error - {str(e)}", foreground="red")
+            messagebox.showerror("Error", f"Failed to check robots rules: {str(e)}")
 
     def copy_robots_results(self):
-        """复制robots检查结果到剪贴板"""
+        """Copy robots check results to clipboard"""
         self.root.clipboard_clear()
         parsed_content = self.robots_parsed_text.get(1.0, tk.END).strip()
         self.root.clipboard_append(parsed_content)
-        messagebox.showinfo("已复制", "结果已复制到剪贴板")
+        messagebox.showinfo("Copied", "Results copied to clipboard")
 
-    # ========== 文件处理工具 ==========
+    # ========== File Processing Tool ==========
 
     def setup_batch_processor_ui(self):
-        """设置批量文件处理器界面"""
-        # 操作类型选择
-        ttk.Label(self.control_container, text="操作类型:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        """Setup Batch File Processor UI"""
+        # Operation Type Selection
+        ttk.Label(self.control_container, text="Operation Type:").grid(row=0, column=0, sticky=tk.W, pady=5)
         self.batch_operation_var = tk.StringVar(value="rename")
         op_combo = ttk.Combobox(self.control_container, textvariable=self.batch_operation_var,
                                 values=["rename", "copy", "move"], state="readonly")
         op_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5)
         op_combo.bind('<<ComboboxSelected>>', self.on_batch_operation_change)
 
-        # 目录选择
-        ttk.Label(self.control_container, text="目录路径:").grid(row=1, column=0, sticky=tk.W, pady=5)
+        # Directory Selection
+        ttk.Label(self.control_container, text="Directory Path:").grid(row=1, column=0, sticky=tk.W, pady=5)
         dir_frame = ttk.Frame(self.control_container)
         dir_frame.grid(row=1, column=1, sticky=(tk.W, tk.E), pady=5)
         dir_frame.columnconfigure(0, weight=1)
 
         self.batch_dir_var = tk.StringVar(value=".")
         ttk.Entry(dir_frame, textvariable=self.batch_dir_var).grid(row=0, column=0, sticky=(tk.W, tk.E))
-        ttk.Button(dir_frame, text="选择目录", command=self.select_batch_dir).grid(row=0, column=1, padx=(5, 0))
+        ttk.Button(dir_frame, text="Select Dir", command=self.select_batch_dir).grid(row=0, column=1, padx=(5, 0))
 
-        # 目标目录（用于复制和移动）
+        # Target Directory (for copy and move)
         self.target_dir_frame = ttk.Frame(self.control_container)
         self.target_dir_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
         self.target_dir_frame.columnconfigure(1, weight=1)
 
-        # 参数框架
+        # Parameters Frame
         self.params_frame = ttk.Frame(self.control_container)
         self.params_frame.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
         self.params_frame.columnconfigure(1, weight=1)
 
-        # 选项框架
-        options_frame = ttk.LabelFrame(self.control_container, text="选项", padding="5")
+        # Options Frame
+        options_frame = ttk.LabelFrame(self.control_container, text="Options", padding="5")
         options_frame.grid(row=4, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
 
-        # 预览模式
+        # Preview Mode
         self.preview_var = tk.BooleanVar(value=True)
-        ttk.Checkbutton(options_frame, text="预览模式", variable=self.preview_var).grid(row=0, column=0, sticky=tk.W)
+        ttk.Checkbutton(options_frame, text="Preview Mode", variable=self.preview_var).grid(row=0, column=0, sticky=tk.W)
 
-        # 递归搜索
+        # Recursive Search
         self.recursive_var = tk.BooleanVar(value=False)
-        self.recursive_check = ttk.Checkbutton(options_frame, text="递归搜索", variable=self.recursive_var)
+        self.recursive_check = ttk.Checkbutton(options_frame, text="Recursive Search", variable=self.recursive_var)
 
-        # 覆盖文件
+        # Overwrite Files
         self.overwrite_var = tk.BooleanVar(value=False)
-        self.overwrite_check = ttk.Checkbutton(options_frame, text="覆盖已存在文件", variable=self.overwrite_var)
+        self.overwrite_check = ttk.Checkbutton(options_frame, text="Overwrite Existing Files", variable=self.overwrite_var)
 
-        # 按钮框架
+        # Button Frame
         button_frame = ttk.Frame(self.control_container)
         button_frame.grid(row=5, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=10)
 
-        ttk.Button(button_frame, text="执行操作", command=self.run_batch_operation).grid(row=0, column=0, padx=(0, 10))
-        ttk.Button(button_frame, text="执行预览的操作", command=self.execute_batch_operations).grid(row=0, column=1)
+        ttk.Button(button_frame, text="Execute Operation", command=self.run_batch_operation).grid(row=0, column=0, padx=(0, 10))
+        ttk.Button(button_frame, text="Execute Previewed Ops", command=self.execute_batch_operations).grid(row=0, column=1)
 
         self.control_container.columnconfigure(1, weight=1)
 
-        # 初始化操作界面
+        # Initialize operation UI
         self.on_batch_operation_change()
 
     def on_batch_operation_change(self, event=None):
-        """批量操作类型改变时的处理"""
-        # 清除参数框架
+        """Handle batch operation type change"""
+        # Clear parameters frame
         for widget in self.params_frame.winfo_children():
             widget.destroy()
 
-        # 清除目标目录框架
+        # Clear target directory frame
         for widget in self.target_dir_frame.winfo_children():
             widget.destroy()
 
@@ -1490,52 +1490,52 @@ class DevKitZeroGUI:
             self.setup_target_dir()
 
     def setup_rename_params(self):
-        """设置重命名参数"""
+        """Setup rename parameters"""
         row = 0
 
-        # 查找模式
-        ttk.Label(self.params_frame, text="查找模式:").grid(row=row, column=0, sticky=tk.W, pady=2)
+        # Find Pattern
+        ttk.Label(self.params_frame, text="Find Pattern:").grid(row=row, column=0, sticky=tk.W, pady=2)
         self.pattern_var = tk.StringVar()
         ttk.Entry(self.params_frame, textvariable=self.pattern_var).grid(row=row, column=1, sticky=(tk.W, tk.E), pady=2)
         row += 1
 
-        # 替换为
-        ttk.Label(self.params_frame, text="替换为:").grid(row=row, column=0, sticky=tk.W, pady=2)
+        # Replace With
+        ttk.Label(self.params_frame, text="Replace With:").grid(row=row, column=0, sticky=tk.W, pady=2)
         self.replacement_var = tk.StringVar()
         ttk.Entry(self.params_frame, textvariable=self.replacement_var).grid(row=row, column=1, sticky=(tk.W, tk.E),
                                                                              pady=2)
         row += 1
 
-        # 选项
+        # Options
         self.regex_var = tk.BooleanVar(value=False)
-        ttk.Checkbutton(self.params_frame, text="使用正则表达式", variable=self.regex_var).grid(
+        ttk.Checkbutton(self.params_frame, text="Use Regex", variable=self.regex_var).grid(
             row=row, column=0, columnspan=2, sticky=tk.W, pady=2)
         row += 1
 
         self.case_sensitive_var = tk.BooleanVar(value=True)
-        ttk.Checkbutton(self.params_frame, text="大小写敏感", variable=self.case_sensitive_var).grid(
+        ttk.Checkbutton(self.params_frame, text="Case Sensitive", variable=self.case_sensitive_var).grid(
             row=row, column=0, columnspan=2, sticky=tk.W, pady=2)
         row += 1
 
-        # 扩展名过滤 - 使用自定义的占位符Entry
-        ttk.Label(self.params_frame, text="扩展名过滤:").grid(row=row, column=0, sticky=tk.W, pady=2)
-        self.extension_entry = PlaceholderEntry(self.params_frame, placeholder="例如: .txt, .jpg")
+        # Extension Filter - Use custom placeholder Entry
+        ttk.Label(self.params_frame, text="Extension Filter:").grid(row=row, column=0, sticky=tk.W, pady=2)
+        self.extension_entry = PlaceholderEntry(self.params_frame, placeholder="e.g.: .txt, .jpg")
         self.extension_entry.grid(row=row, column=1, sticky=(tk.W, tk.E), pady=2)
 
         self.params_frame.columnconfigure(1, weight=1)
 
     def setup_copy_params(self):
-        """设置复制参数"""
+        """Setup copy parameters"""
         row = 0
 
-        # 文件模式
-        ttk.Label(self.params_frame, text="文件模式:").grid(row=row, column=0, sticky=tk.W, pady=2)
+        # File Pattern
+        ttk.Label(self.params_frame, text="File Pattern:").grid(row=row, column=0, sticky=tk.W, pady=2)
         self.copy_pattern_var = tk.StringVar(value="*")
         ttk.Entry(self.params_frame, textvariable=self.copy_pattern_var).grid(row=row, column=1, sticky=(tk.W, tk.E),
                                                                               pady=2)
         row += 1
 
-        # 显示选项
+        # Display Options
         self.recursive_check.grid(row=row, column=0, columnspan=2, sticky=tk.W, pady=2)
         row += 1
         self.overwrite_check.grid(row=row, column=0, columnspan=2, sticky=tk.W, pady=2)
@@ -1543,17 +1543,17 @@ class DevKitZeroGUI:
         self.params_frame.columnconfigure(1, weight=1)
 
     def setup_move_params(self):
-        """设置移动参数"""
+        """Setup move parameters"""
         row = 0
 
-        # 文件模式
-        ttk.Label(self.params_frame, text="文件模式:").grid(row=row, column=0, sticky=tk.W, pady=2)
+        # File Pattern
+        ttk.Label(self.params_frame, text="File Pattern:").grid(row=row, column=0, sticky=tk.W, pady=2)
         self.move_pattern_var = tk.StringVar(value="*")
         ttk.Entry(self.params_frame, textvariable=self.move_pattern_var).grid(row=row, column=1, sticky=(tk.W, tk.E),
                                                                               pady=2)
         row += 1
 
-        # 显示选项
+        # Display Options
         self.recursive_check.grid(row=row, column=0, columnspan=2, sticky=tk.W, pady=2)
         row += 1
         self.overwrite_check.grid(row=row, column=0, columnspan=2, sticky=tk.W, pady=2)
@@ -1561,58 +1561,58 @@ class DevKitZeroGUI:
         self.params_frame.columnconfigure(1, weight=1)
 
     def setup_target_dir(self):
-        """设置目标目录"""
-        ttk.Label(self.target_dir_frame, text="目标目录:").grid(row=0, column=0, sticky=tk.W, pady=2)
+        """Setup target directory"""
+        ttk.Label(self.target_dir_frame, text="Target Dir:").grid(row=0, column=0, sticky=tk.W, pady=2)
         dir_frame = ttk.Frame(self.target_dir_frame)
         dir_frame.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=2)
         dir_frame.columnconfigure(0, weight=1)
 
         self.target_dir_var = tk.StringVar()
         ttk.Entry(dir_frame, textvariable=self.target_dir_var).grid(row=0, column=0, sticky=(tk.W, tk.E))
-        ttk.Button(dir_frame, text="选择目录", command=self.select_target_dir).grid(row=0, column=1, padx=(5, 0))
+        ttk.Button(dir_frame, text="Select Dir", command=self.select_target_dir).grid(row=0, column=1, padx=(5, 0))
 
         self.target_dir_frame.columnconfigure(1, weight=1)
 
     def setup_format_detector_ui(self):
-        """设置格式检测器界面"""
-        # 检测模式选择
-        ttk.Label(self.control_container, text="检测模式:").grid(row=0, column=0, sticky=tk.W, pady=5)
+        """Setup Format Detector UI"""
+        # Detection Mode Selection
+        ttk.Label(self.control_container, text="Detection Mode:").grid(row=0, column=0, sticky=tk.W, pady=5)
         self.detect_mode_var = tk.StringVar(value="file")
         mode_combo = ttk.Combobox(self.control_container, textvariable=self.detect_mode_var,
                                   values=["file", "directory", "content"], state="readonly")
         mode_combo.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=5)
         mode_combo.bind('<<ComboboxSelected>>', self.on_detect_mode_change)
 
-        # 文件/目录选择框架
+        # File/Directory Selection Frame
         self.path_frame = ttk.Frame(self.control_container)
         self.path_frame.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E), pady=5)
         self.path_frame.columnconfigure(1, weight=1)
 
-        # 内容输入框架
+        # Content Input Frame
         self.content_frame = ttk.Frame(self.control_container)
 
-        # 详细输出选项
-        ttk.Label(self.control_container, text="输出选项:").grid(row=3, column=0, sticky=tk.W, pady=5)
+        # Detailed Output Options
+        ttk.Label(self.control_container, text="Output Options:").grid(row=3, column=0, sticky=tk.W, pady=5)
         self.verbose_var = tk.BooleanVar(value=True)
-        ttk.Checkbutton(self.control_container, text="详细输出", variable=self.verbose_var).grid(
+        ttk.Checkbutton(self.control_container, text="Verbose Output", variable=self.verbose_var).grid(
             row=3, column=1, sticky=tk.W, pady=5)
 
-        # 按钮
-        ttk.Button(self.control_container, text="开始检测", command=self.run_format_detection).grid(
+        # Buttons
+        ttk.Button(self.control_container, text="Start Detection", command=self.run_format_detection).grid(
             row=4, column=0, columnspan=2, pady=10)
 
         self.control_container.columnconfigure(1, weight=1)
 
-        # 初始化检测模式界面
+        # Initialize detection mode UI
         self.on_detect_mode_change()
 
     def on_detect_mode_change(self, event=None):
-        """检测模式改变时的处理"""
-        # 清除路径框架
+        """Handle detection mode change"""
+        # Clear path frame
         for widget in self.path_frame.winfo_children():
             widget.destroy()
 
-        # 隐藏内容框架
+        # Hide content frame
         self.content_frame.grid_forget()
 
         mode = self.detect_mode_var.get()
@@ -1625,43 +1625,43 @@ class DevKitZeroGUI:
             self.setup_content_detection_ui()
 
     def setup_file_detection_ui(self):
-        """设置文件检测界面"""
-        ttk.Label(self.path_frame, text="文件路径:").grid(row=0, column=0, sticky=tk.W, pady=2)
+        """Setup file detection UI"""
+        ttk.Label(self.path_frame, text="File Path:").grid(row=0, column=0, sticky=tk.W, pady=2)
         file_frame = ttk.Frame(self.path_frame)
         file_frame.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=2)
         file_frame.columnconfigure(0, weight=1)
 
         self.file_path_var = tk.StringVar()
         ttk.Entry(file_frame, textvariable=self.file_path_var).grid(row=0, column=0, sticky=(tk.W, tk.E))
-        ttk.Button(file_frame, text="选择文件", command=self.select_detect_file).grid(row=0, column=1, padx=(5, 0))
+        ttk.Button(file_frame, text="Select File", command=self.select_detect_file).grid(row=0, column=1, padx=(5, 0))
 
         self.path_frame.columnconfigure(1, weight=1)
 
     def setup_directory_detection_ui(self):
-        """设置目录检测界面"""
-        ttk.Label(self.path_frame, text="目录路径:").grid(row=0, column=0, sticky=tk.W, pady=2)
+        """Setup directory detection UI"""
+        ttk.Label(self.path_frame, text="Directory Path:").grid(row=0, column=0, sticky=tk.W, pady=2)
         dir_frame = ttk.Frame(self.path_frame)
         dir_frame.grid(row=0, column=1, sticky=(tk.W, tk.E), pady=2)
         dir_frame.columnconfigure(0, weight=1)
 
         self.dir_path_var = tk.StringVar(value=".")
         ttk.Entry(dir_frame, textvariable=self.dir_path_var).grid(row=0, column=0, sticky=(tk.W, tk.E))
-        ttk.Button(dir_frame, text="选择目录", command=self.select_detect_dir).grid(row=0, column=1, padx=(5, 0))
+        ttk.Button(dir_frame, text="Select Dir", command=self.select_detect_dir).grid(row=0, column=1, padx=(5, 0))
 
         self.path_frame.columnconfigure(1, weight=1)
 
     def setup_content_detection_ui(self):
-        """设置内容检测界面"""
-        # 隐藏路径框架，显示内容框架
+        """Setup content detection UI"""
+        # Hide path frame, show content frame
         self.path_frame.grid_forget()
         self.content_frame.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S), pady=5)
         self.content_frame.columnconfigure(0, weight=1)
 
-        ttk.Label(self.content_frame, text="输入内容:").grid(row=0, column=0, sticky=tk.W, pady=2)
+        ttk.Label(self.content_frame, text="Input Content:").grid(row=0, column=0, sticky=tk.W, pady=2)
         self.content_text = scrolledtext.ScrolledText(self.content_frame, height=10, wrap=tk.WORD)
         self.content_text.grid(row=1, column=0, sticky=(tk.W, tk.E, tk.N, tk.S), pady=2)
 
-        ttk.Label(self.content_frame, text="文件名(可选):").grid(row=2, column=0, sticky=tk.W, pady=2)
+        ttk.Label(self.content_frame, text="Filename (Optional):").grid(row=2, column=0, sticky=tk.W, pady=2)
         self.content_filename_var = tk.StringVar()
         ttk.Entry(self.content_frame, textvariable=self.content_filename_var).grid(
             row=3, column=0, sticky=(tk.W, tk.E), pady=2)
@@ -1670,48 +1670,48 @@ class DevKitZeroGUI:
         self.content_frame.rowconfigure(1, weight=1)
 
     def select_batch_dir(self):
-        """选择批量处理目录"""
+        """Select batch processing directory"""
         directory = filedialog.askdirectory(initialdir=".")
         if directory:
             self.batch_dir_var.set(directory)
 
     def select_target_dir(self):
-        """选择目标目录"""
+        """Select target directory"""
         directory = filedialog.askdirectory(initialdir=".")
         if directory:
             self.target_dir_var.set(directory)
 
     def select_detect_file(self):
-        """选择检测文件"""
+        """Select file to detect"""
         filename = filedialog.askopenfilename(
-            title="选择要检测的文件",
-            filetypes=[("所有文件", "*.*"), ("文本文件", "*.txt"), ("JSON文件", "*.json"),
-                       ("XML文件", "*.xml"), ("CSV文件", "*.csv")]
+            title="Select File to Detect",
+            filetypes=[("All Files", "*.*"), ("Text Files", "*.txt"), ("JSON Files", "*.json"),
+                       ("XML Files", "*.xml"), ("CSV Files", "*.csv")]
         )
         if filename:
             self.file_path_var.set(filename)
 
     def select_detect_dir(self):
-        """选择检测目录"""
+        """Select directory to detect"""
         directory = filedialog.askdirectory(initialdir=".")
         if directory:
             self.dir_path_var.set(directory)
 
     def run_batch_operation(self):
-        """运行批量操作"""
+        """Run batch operation"""
         try:
             if self.BatchFileProcessor is None:
-                raise ImportError("无法导入 BatchFileProcessor，请检查文件位置")
+                raise ImportError("Cannot import BatchFileProcessor, please check file location")
 
             operation = self.batch_operation_var.get()
             directory = self.batch_dir_var.get().strip()
 
             if not directory:
-                raise ValueError("请选择目录")
+                raise ValueError("Please select a directory")
 
-            # 创建处理器实例
+            # Create processor instance
             batch_processor = self.BatchFileProcessor(preview=self.preview_var.get())
-            batch_processor.operations = []  # 清空之前的操作
+            batch_processor.operations = []  # Clear previous operations
 
             if operation == "rename":
                 self.run_rename_operation(directory, batch_processor)
@@ -1720,16 +1720,16 @@ class DevKitZeroGUI:
             elif operation == "move":
                 self.run_move_operation(directory, batch_processor)
 
-            # 显示结果
+            # Show results
             if batch_processor.preview:
-                result = "预览模式 - 以下操作将被执行:\n\n"
+                result = "Preview Mode - The following operations will be performed:\n\n"
                 for i, (op_type, src, dst) in enumerate(batch_processor.operations, 1):
                     result += f"{i}. {op_type}: '{os.path.basename(src)}' -> '{os.path.basename(dst)}'\n"
-                result += f"\n共 {len(batch_processor.operations)} 个操作"
-                # 保存处理器实例供后续使用
+                result += f"\nTotal {len(batch_processor.operations)} operations"
+                # Save processor instance for later use
                 self.current_batch_processor = batch_processor
             else:
-                result = "操作已完成！"
+                result = "Operation completed!"
 
             self.display_result(result)
 
@@ -1737,14 +1737,14 @@ class DevKitZeroGUI:
             self.display_error(str(e))
 
     def run_rename_operation(self, directory, batch_processor):
-        """运行重命名操作"""
+        """Run rename operation"""
         pattern = self.pattern_var.get().strip()
         replacement = self.replacement_var.get().strip()
 
         if not pattern:
-            raise ValueError("请输入查找模式")
+            raise ValueError("Please enter search pattern")
 
-        # 使用自定义Entry的get_value方法获取扩展名
+        # Get extension using custom Entry method
         extension = self.extension_entry.get_value().strip()
         extension = extension if extension else None
 
@@ -1758,10 +1758,10 @@ class DevKitZeroGUI:
         )
 
     def run_copy_operation(self, directory, batch_processor):
-        """运行复制操作"""
+        """Run copy operation"""
         target_dir = self.target_dir_var.get().strip()
         if not target_dir:
-            raise ValueError("请选择目标目录")
+            raise ValueError("Please select target directory")
 
         pattern = self.copy_pattern_var.get().strip()
 
@@ -1774,10 +1774,10 @@ class DevKitZeroGUI:
         )
 
     def run_move_operation(self, directory, batch_processor):
-        """运行移动操作"""
+        """Run move operation"""
         target_dir = self.target_dir_var.get().strip()
         if not target_dir:
-            raise ValueError("请选择目标目录")
+            raise ValueError("Please select target directory")
 
         pattern = self.move_pattern_var.get().strip()
 
@@ -1790,33 +1790,33 @@ class DevKitZeroGUI:
         )
 
     def execute_batch_operations(self):
-        """执行预览的操作"""
+        """Execute previewed operations"""
         if not hasattr(self, 'current_batch_processor') or not self.current_batch_processor.operations:
-            messagebox.showinfo("提示", "没有操作需要执行")
+            messagebox.showinfo("Info", "No operations to execute")
             return
 
         try:
             self.current_batch_processor.execute_operations()
-            self.display_result("所有操作已完成！")
+            self.display_result("All operations completed!")
         except Exception as e:
             self.display_error(str(e))
 
     def run_format_detection(self):
-        """运行格式检测"""
+        """Run format detection"""
         try:
             if self.FormatDetector is None:
-                raise ImportError("无法导入 FormatDetector，请检查文件位置")
+                raise ImportError("Cannot import FormatDetector, please check file location")
 
             mode = self.detect_mode_var.get()
             verbose = self.verbose_var.get()
 
-            # 创建检测器实例
+            # Create detector instance
             format_detector = self.FormatDetector()
 
             if mode == "file":
                 file_path = self.file_path_var.get().strip()
                 if not file_path:
-                    raise ValueError("请选择要检测的文件")
+                    raise ValueError("Please select a file to detect")
 
                 result = format_detector.detect_file(file_path)
                 output = self.format_detection_result(result, verbose)
@@ -1824,26 +1824,26 @@ class DevKitZeroGUI:
             elif mode == "directory":
                 dir_path = self.dir_path_var.get().strip()
                 if not dir_path:
-                    raise ValueError("请选择要检测的目录")
+                    raise ValueError("Please select a directory to detect")
 
                 results = format_detector.batch_detect(dir_path)
-                output = "批量格式检测结果:\n\n"
+                output = "Batch Format Detection Results:\n\n"
                 for filename, result in results.items():
-                    output += f"文件: {filename}\n"
+                    output += f"File: {filename}\n"
                     if 'error' in result:
-                        output += f"  错误: {result['error']}\n"
+                        output += f"  Error: {result['error']}\n"
                     else:
-                        output += f"  最可能格式: {result.get('most_likely_format', 'unknown').upper()}\n"
+                        output += f"  Most likely format: {result.get('most_likely_format', 'unknown').upper()}\n"
                         for fmt, detection in result['detections'].items():
-                            status = "✓ 有效" if detection.get('is_valid', False) else "✗ 无效"
+                            status = "✓ Valid" if detection.get('is_valid', False) else "✗ Invalid"
                             confidence = detection.get('confidence', 0)
-                            output += f"  {fmt.upper():6} : {status} (置信度: {confidence:.2f})\n"
+                            output += f"  {fmt.upper():6} : {status} (Confidence: {confidence:.2f})\n"
                     output += "\n"
 
             elif mode == "content":
                 content = self.content_text.get(1.0, tk.END).strip()
                 if not content:
-                    raise ValueError("请输入要检测的内容")
+                    raise ValueError("Please enter content to detect")
 
                 filename = self.content_filename_var.get().strip()
                 filename = filename if filename else None
@@ -1857,28 +1857,28 @@ class DevKitZeroGUI:
             self.display_error(str(e))
 
     def format_detection_result(self, result, verbose=False):
-        """自定义格式化检测结果函数"""
+        """Format detection result"""
         if 'error' in result:
-            return f"错误: {result['error']}"
+            return f"Error: {result['error']}"
 
-        output = f"文件: {result.get('filename', 'N/A')}\n"
-        output += f"内容预览: {result.get('content_preview', 'N/A')}\n\n"
-        output += "检测结果:\n"
+        output = f"File: {result.get('filename', 'N/A')}\n"
+        output += f"Content Preview: {result.get('content_preview', 'N/A')}\n\n"
+        output += "Detection Results:\n"
 
         for format_name, detection in result['detections'].items():
-            status = "✓ 有效" if detection.get('is_valid', False) else "✗ 无效"
+            status = "✓ Valid" if detection.get('is_valid', False) else "✗ Invalid"
             confidence = detection.get('confidence', 0)
-            output += f"  {format_name.upper():6} : {status} (置信度: {confidence:.2f})\n"
+            output += f"  {format_name.upper():6} : {status} (Confidence: {confidence:.2f})\n"
 
             if verbose and detection.get('is_valid', False):
                 details = detection.get('details', '')
                 if details:
-                    output += f"          详情: {details}\n"
+                    output += f"          Details: {details}\n"
 
             if verbose and detection.get('error'):
-                output += f"          错误: {detection['error']}\n"
+                output += f"          Error: {detection['error']}\n"
 
-        output += f"\n最可能格式: {result.get('most_likely_format', 'unknown').upper()}\n"
+        output += f"\nMost likely format: {result.get('most_likely_format', 'unknown').upper()}\n"
 
         return output
 

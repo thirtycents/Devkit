@@ -106,10 +106,10 @@ regex_tester = RegexTester()
 
 
 def main_function(args):
-    """CLI 主函数"""
+    """CLI Main Function"""
     tester = RegexTester()
     
-    # 解析 flags
+    # Parse flags
     flags = 0
     if args.ignorecase:
         flags |= re.IGNORECASE
@@ -118,49 +118,49 @@ def main_function(args):
     if args.dotall:
         flags |= re.DOTALL
     
-    # 测试正则表达式
+    # Test regex
     result = tester.test_pattern(args.pattern, args.text, flags)
     
     if result['success']:
-        print(f"✓ 匹配成功! 找到 {result['match_count']} 个匹配项\n")
+        print(f"✓ Match successful! Found {result['match_count']} matches\n")
         
         if result['match_count'] > 0:
-            print("匹配详情:")
+            print("Match Details:")
             print("-" * 50)
             for i, match in enumerate(result['matches'], 1):
-                print(f"匹配 #{i}:")
-                print(f"  位置: {match['start']}-{match['end']}")
-                print(f"  内容: {match['group']}")
+                print(f"Match #{i}:")
+                print(f"  Position: {match['start']}-{match['end']}")
+                print(f"  Content: {match['group']}")
                 if match['groups']:
-                    print(f"  分组: {match['groups']}")
+                    print(f"  Groups: {match['groups']}")
                 print()
             
             if args.show_replacement:
-                print("替换预览 (用 [MATCH] 标记):")
+                print("Replacement Preview (marked with [MATCH]):")
                 print("-" * 50)
                 print(result['replaced_text'])
         else:
-            print("未找到匹配项")
+            print("No matches found")
         
         return 0
     else:
-        print(f"✗ 正则表达式错误: {result['error']}")
+        print(f"✗ Regex Error: {result['error']}")
         return 1
 
 
 def register_parser(subparsers):
-    """注册 CLI 子命令"""
+    """Register CLI subcommand"""
     parser = subparsers.add_parser(
         'regex',
-        help='正则表达式测试工具',
-        description='测试正则表达式模式并查看匹配结果'
+        help='Regex testing tool',
+        description='Test regex patterns and view match results'
     )
     
-    parser.add_argument('pattern', help='正则表达式模式')
-    parser.add_argument('text', help='要匹配的文本')
-    parser.add_argument('-i', '--ignorecase', action='store_true', help='忽略大小写')
-    parser.add_argument('-m', '--multiline', action='store_true', help='多行模式')
-    parser.add_argument('-s', '--dotall', action='store_true', help='. 匹配任意字符(包括换行)')
-    parser.add_argument('-r', '--show-replacement', action='store_true', help='显示替换预览')
+    parser.add_argument('pattern', help='Regex pattern')
+    parser.add_argument('text', help='Text to match')
+    parser.add_argument('-i', '--ignorecase', action='store_true', help='Ignore case')
+    parser.add_argument('-m', '--multiline', action='store_true', help='Multiline mode')
+    parser.add_argument('-s', '--dotall', action='store_true', help='. matches any character (including newline)')
+    parser.add_argument('-r', '--show-replacement', action='store_true', help='Show replacement preview')
     
     parser.set_defaults(func=main_function)

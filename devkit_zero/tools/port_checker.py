@@ -1,6 +1,6 @@
 """
-端口检查工具
-检查端口占用情况和对应进程
+Port Checker Tool
+Check port usage and corresponding processes
 """
 
 import argparse
@@ -14,13 +14,13 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 def check_port(host: str, port: int, timeout: int = 3) -> Dict[str, Any]:
     """
-    检查端口是否被占用
+    Check if port is in use
     Args:
-        host: 主机地址
-        port: 端口号
-        timeout: 连接超时时间
+        host: Host address
+        port: Port number
+        timeout: Connection timeout
     Returns:
-        端口检查结果
+        Port check result
     """
     result = {
         'host': host,
@@ -30,7 +30,7 @@ def check_port(host: str, port: int, timeout: int = 3) -> Dict[str, Any]:
         'process_info': None
     }
     
-    # 检查端口是否开放
+    # Check if port is open
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(timeout)
@@ -40,17 +40,17 @@ def check_port(host: str, port: int, timeout: int = 3) -> Dict[str, Any]:
     except socket.error:
         result['is_open'] = False
     
-    # 检查端口是否在监听
+    # Check if port is listening
     try:
         if sys.platform.startswith('win'):
-            # Windows 系统
+            # Windows system
             cmd = f'netstat -ano | findstr :{port}'
             output = subprocess.check_output(cmd, shell=True, text=True, encoding='gbk')
             if output:
                 result['is_listening'] = True
                 result['process_info'] = parse_windows_netstat(output)
         else:
-            # Linux 系统
+            # Linux system
             cmd = f'netstat -tulpn | grep :{port}'
             output = subprocess.check_output(cmd, shell=True, text=True)
             if output:
@@ -64,7 +64,7 @@ def check_port(host: str, port: int, timeout: int = 3) -> Dict[str, Any]:
     return result
 
 def _try_connect_all(host: str, port: int, timeout: int) -> bool:
-    # 对 host:port 逐个地址族尝试连接（IPv4/IPv6），任一成功即认为端口开放
+    # Try connecting to host:port for each address family (IPv4/IPv6), consider open if any succeeds
     try:
         infos = socket.getaddrinfo(host, port, 0, socket.SOCK_STREAM)
     except socket.gaierror:
@@ -83,7 +83,7 @@ def _try_connect_all(host: str, port: int, timeout: int) -> bool:
     return False
 
 def parse_windows_netstat(output: str) -> List[Dict[str, str]]:
-    # 解析 Windows netstat 输出
+    # Parse Windows netstat output
     processes = []
     lines = output.strip().split('\n')
     
@@ -92,7 +92,7 @@ def parse_windows_netstat(output: str) -> List[Dict[str, str]]:
         if len(parts) >= 5:
             pid = parts[-1]
             try:
-                # 获取进程名
+                # Get process name
                 cmd = f'tasklist /FI "PID eq {pid}" /FO CSV /NH'
                 task_output = subprocess.check_output(cmd, shell=True, text=True, encoding='gbk')
                 if task_output:
@@ -114,7 +114,7 @@ def parse_windows_netstat(output: str) -> List[Dict[str, str]]:
 
 
 def parse_unix_netstat(output: str) -> List[Dict[str, str]]:
-    # 解析 Unix/Linux netstat 输出
+    # Parse Unix/Linux netstat output
     processes = []
     lines = output.strip().split('\n')
     
@@ -141,15 +141,15 @@ def parse_unix_netstat(output: str) -> List[Dict[str, str]]:
 '''
 def scan_ports(host: str, start_port: int, end_port: int) -> List[Dict[str, Any]]:
     """
-    扫描端口范围
+    Scan port range
     
     Args:
-        host: 主机地址
-        start_port: 起始端口
-        end_port: 结束端口
+        host: Host address
+        start_port: Start port
+        end_port: End port
         
     Returns:
-        开放端口列表
+        List of open ports
     """
     open_ports = []
     
@@ -161,7 +161,7 @@ def scan_ports(host: str, start_port: int, end_port: int) -> List[Dict[str, Any]
     return open_ports
 '''
 def _resolve_host_once(host):
-    # 预解析 host，一次性拿到 (family, sockaddr_base) 去复用
+    # Pre-resolve host, get (family, sockaddr_base) once for reuse
     infos = socket.getaddrinfo(host, None, 0, socket.SOCK_STREAM)
     seen = []
     for fam, socktype, proto, _, sockaddr in infos:
@@ -182,15 +182,15 @@ def _try_connect_family(family, addr, port, timeout):
 
 def scan_ports(host: str, start_port: int, end_port: int, *,
                timeout: float = 0.4, max_workers: int = 200):
-    # 并发扫描端口范围
+    # Concurrent port scanning
     if end_port < start_port:
-        raise ValueError("结束端口必须大于起始端口")
+        raise ValueError("End port must be greater than start port")
     families = _resolve_host_once(host)
 
     def check_one(p):
         for fam, addr in families:
             if _try_connect_family(fam, addr, p, timeout):
-                # 仅填充最核心的信息
+                # Only fill core information
                 return {'host': host, 'port': p, 'is_open': True,
                         'is_listening': False, 'process_info': None}
         return None
@@ -202,11 +202,11 @@ def scan_ports(host: str, start_port: int, end_port: int, *,
             res = fut.result()
             if res:
                 open_ports.append(res)
-    # 若需要 process_info，可以对 open_ports 再逐个调用一次 check_port(host, p, timeout)
+    # If process_info is needed, call check_port(host, p, timeout) again for each open port
     return open_ports
 
 def get_common_ports() -> Dict[int, str]:
-    # 获取常见端口及其服务
+    # Get common ports and their services
     return {
         21: "FTP",
         22: "SSH", 
@@ -232,53 +232,53 @@ def get_common_ports() -> Dict[int, str]:
 
 
 def format_port_result(result: Dict[str, Any]) -> str:
-    # 格式化端口检查结果
+    # Format port check result
     lines = []
     
     host = result['host']
     port = result['port']
     
-    # 获取常见端口服务名
+    # Get common port service name
     common_ports = get_common_ports()
     service = common_ports.get(port, "Unknown Service")
     
-    lines.append(f"主机: {host}")
-    lines.append(f"端口: {port} ({service})")
+    lines.append(f"Host: {host}")
+    lines.append(f"Port: {port} ({service})")
     
     if result['is_open']:
-        lines.append("端口状态: 开放")
-        lines.append("监听状态: 正在监听" if result['is_listening'] else "👂 监听状态: 未监听")
+        lines.append("Port Status: Open")
+        lines.append("Listening Status: Listening" if result['is_listening'] else "👂 Listening Status: Not Listening")
         
         if result['process_info']:
-            lines.append("\n进程信息:")
+            lines.append("\nProcess Info:")
             for proc in result['process_info']:
                 lines.append(f"  • PID: {proc['pid']}")
-                lines.append(f"  • 进程名: {proc['name']}")
-                lines.append(f"  • 协议: {proc['protocol']}")
-                lines.append(f"  • 本地地址: {proc['local_address']}")
-                lines.append(f"  • 状态: {proc['state']}")
+                lines.append(f"  • Process Name: {proc['name']}")
+                lines.append(f"  • Protocol: {proc['protocol']}")
+                lines.append(f"  • Local Address: {proc['local_address']}")
+                lines.append(f"  • State: {proc['state']}")
                 lines.append("")
     else:
-        lines.append("端口状态: 关闭或未响应")
-        lines.append("监听状态: 未监听")
+        lines.append("Port Status: Closed or No Response")
+        lines.append("Listening Status: Not Listening")
     
     return '\n'.join(lines)
 
 
 def format_scan_results(results: List[Dict[str, Any]]) -> str:
-    """格式化端口扫描结果"""
+    """Format port scan results"""
     if not results:
-        return "扫描范围内没有发现开放的端口"
+        return "No open ports found in scan range"
     
     lines = []
-    lines.append(f"发现 {len(results)} 个开放端口:\n")
+    lines.append(f"Found {len(results)} open ports:\n")
     
     common_ports = get_common_ports()
     
     for result in results:
         port = result['port']
         service = common_ports.get(port, "Unknown")
-        lines.append(f"端口 {port} - {service}")
+        lines.append(f"Port {port} - {service}")
         
         if result['process_info']:
             for proc in result['process_info']:
@@ -288,31 +288,31 @@ def format_scan_results(results: List[Dict[str, Any]]) -> str:
 
 
 def register_parser(subparsers):
-    # 注册 port-checker 命令的参数解析器
-    parser = subparsers.add_parser('port', help='端口检查工具')
+    # Register port-checker command parser
+    parser = subparsers.add_parser('port', help='Port Checker Tool')
     
-    subcommands = parser.add_subparsers(dest='action', help='操作类型')
+    subcommands = parser.add_subparsers(dest='action', help='Operation Type')
     
-    # 检查单个端口
-    check_parser = subcommands.add_parser('check', help='检查指定端口')
-    check_parser.add_argument('port', type=int, help='端口号')
-    check_parser.add_argument('--host', default='localhost', help='主机地址 (默认: localhost)')
-    check_parser.add_argument('--timeout', type=int, default=3, help='连接超时时间 (秒)')
+    # Check single port
+    check_parser = subcommands.add_parser('check', help='Check specific port')
+    check_parser.add_argument('port', type=int, help='Port number')
+    check_parser.add_argument('--host', default='localhost', help='Host address (default: localhost)')
+    check_parser.add_argument('--timeout', type=int, default=3, help='Connection timeout (seconds)')
     
-    # 扫描端口范围
-    scan_parser = subcommands.add_parser('scan', help='扫描端口范围')
-    scan_parser.add_argument('--host', default='localhost', help='主机地址 (默认: localhost)')
-    scan_parser.add_argument('--start', type=int, default=1, help='起始端口 (默认: 1)')
-    scan_parser.add_argument('--end', type=int, default=1000, help='结束端口 (默认: 1000)')
+    # Scan port range
+    scan_parser = subcommands.add_parser('scan', help='Scan port range')
+    scan_parser.add_argument('--host', default='localhost', help='Host address (default: localhost)')
+    scan_parser.add_argument('--start', type=int, default=1, help='Start port (default: 1)')
+    scan_parser.add_argument('--end', type=int, default=1000, help='End port (default: 1000)')
     
-    # 列出常见端口
-    subcommands.add_parser('list', help='列出常见端口')
+    # List common ports
+    subcommands.add_parser('list', help='List common ports')
     
     parser.set_defaults(func=main)
 
 
 def main(args):
-    # port-checker 工具的主函数
+    # port-checker tool main function
     try:
         if args.action == 'check':
             result = check_port(args.host, args.port, args.timeout)
@@ -320,28 +320,28 @@ def main(args):
             
         elif args.action == 'scan':
             if args.end <= args.start:
-                raise ValueError("结束端口必须大于起始端口")
+                raise ValueError("End port must be greater than start port")
             
             results = scan_ports(args.host, args.start, args.end)
             return format_scan_results(results)
             
         elif args.action == 'list':
             common_ports = get_common_ports()
-            lines = ["常见端口列表:\n"]
+            lines = ["Common Ports List:\n"]
             for port in sorted(common_ports):
                 lines.append(f"  {port:>5}  - {common_ports[port]}")
             
             return '\n'.join(lines)
             
         else:
-            raise ValueError("请选择操作类型: check, scan, list")
+            raise ValueError("Please select operation type: check, scan, list")
             
     except Exception as e:
-        raise RuntimeError(f"端口检查失败: {e}")
+        raise RuntimeError(f"Port check failed: {e}")
 
 
 if __name__ == "__main__":
-    # 测试
-    print("端口检查工具测试:")
+    # Test
+    print("Port Checker Tool Test:")
     result = check_port('localhost', 80)
     print(format_port_result(result))

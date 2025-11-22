@@ -9,22 +9,22 @@ class BatchFileProcessor:
         self.operations = []
     
     def rename_files(self, directory, pattern, replacement, regex=False, case_sensitive=True, extension_filter=None):
-        """批量重命名文件"""
+        """Batch rename files"""
         directory = Path(directory)
         if not directory.exists():
-            print(f"错误: 目录 '{directory}' 不存在")
+            print(f"Error: Directory '{directory}' does not exist")
             return
         
         renamed_count = 0
         for file_path in directory.iterdir():
             if file_path.is_file():
-                # 检查扩展名过滤
+                # Check extension filter
                 if extension_filter and file_path.suffix.lower() != extension_filter.lower():
                     continue
                 
                 old_name = file_path.name
                 
-                # 根据模式生成新文件名
+                # Generate new filename based on pattern
                 if regex:
                     flags = 0 if case_sensitive else re.IGNORECASE
                     new_name = re.sub(pattern, replacement, old_name, flags=flags)
@@ -34,34 +34,34 @@ class BatchFileProcessor:
                     else:
                         new_name = old_name.lower().replace(pattern.lower(), replacement)
                 
-                # 如果文件名有变化，则执行重命名
+                # If filename changed, execute rename
                 if new_name != old_name:
                     new_path = directory / new_name
                     
                     if self.preview:
-                        print(f"[预览] 重命名: '{old_name}' -> '{new_name}'")
+                        print(f"[Preview] Rename: '{old_name}' -> '{new_name}'")
                         self.operations.append(("rename", str(file_path), str(new_path)))
                     else:
                         try:
                             file_path.rename(new_path)
-                            print(f"重命名: '{old_name}' -> '{new_name}'")
+                            print(f"Rename: '{old_name}' -> '{new_name}'")
                             renamed_count += 1
                         except Exception as e:
-                            print(f"错误: 无法重命名 '{old_name}': {e}")
+                            print(f"Error: Cannot rename '{old_name}': {e}")
         
         if not self.preview:
-            print(f"完成! 共重命名 {renamed_count} 个文件")
+            print(f"Done! Renamed {renamed_count} files")
     
     def copy_files(self, source_dir, target_dir, pattern="*", recursive=False, overwrite=False):
-        """批量复制文件"""
+        """Batch copy files"""
         source_dir = Path(source_dir)
         target_dir = Path(target_dir)
         
         if not source_dir.exists():
-            print(f"错误: 源目录 '{source_dir}' 不存在")
+            print(f"Error: Source directory '{source_dir}' does not exist")
             return
         
-        # 创建目标目录（如果不存在）
+        # Create target directory (if not exists)
         if not self.preview:
             target_dir.mkdir(parents=True, exist_ok=True)
         
@@ -72,35 +72,35 @@ class BatchFileProcessor:
             if file_path.is_file():
                 target_path = target_dir / file_path.name
                 
-                # 检查目标文件是否已存在
+                # Check if target file exists
                 if target_path.exists() and not overwrite:
-                    print(f"跳过: '{file_path.name}' 已存在于目标目录")
+                    print(f"Skip: '{file_path.name}' already exists in target directory")
                     continue
                 
                 if self.preview:
-                    print(f"[预览] 复制: '{file_path}' -> '{target_path}'")
+                    print(f"[Preview] Copy: '{file_path}' -> '{target_path}'")
                     self.operations.append(("copy", str(file_path), str(target_path)))
                 else:
                     try:
                         shutil.copy2(file_path, target_path)
-                        print(f"复制: '{file_path.name}'")
+                        print(f"Copy: '{file_path.name}'")
                         copied_count += 1
                     except Exception as e:
-                        print(f"错误: 无法复制 '{file_path.name}': {e}")
+                        print(f"Error: Cannot copy '{file_path.name}': {e}")
         
         if not self.preview:
-            print(f"完成! 共复制 {copied_count} 个文件")
+            print(f"Done! Copied {copied_count} files")
     
     def move_files(self, source_dir, target_dir, pattern="*", recursive=False, overwrite=False):
-        """批量移动文件"""
+        """Batch move files"""
         source_dir = Path(source_dir)
         target_dir = Path(target_dir)
         
         if not source_dir.exists():
-            print(f"错误: 源目录 '{source_dir}' 不存在")
+            print(f"Error: Source directory '{source_dir}' does not exist")
             return
         
-        # 创建目标目录（如果不存在）
+        # Create target directory (if not exists)
         if not self.preview:
             target_dir.mkdir(parents=True, exist_ok=True)
         
@@ -111,36 +111,36 @@ class BatchFileProcessor:
             if file_path.is_file():
                 target_path = target_dir / file_path.name
                 
-                # 检查目标文件是否已存在
+                # Check if target file exists
                 if target_path.exists() and not overwrite:
-                    print(f"跳过: '{file_path.name}' 已存在于目标目录")
+                    print(f"Skip: '{file_path.name}' already exists in target directory")
                     continue
                 
                 if self.preview:
-                    print(f"[预览] 移动: '{file_path}' -> '{target_path}'")
+                    print(f"[Preview] Move: '{file_path}' -> '{target_path}'")
                     self.operations.append(("move", str(file_path), str(target_path)))
                 else:
                     try:
                         shutil.move(str(file_path), str(target_path))
-                        print(f"移动: '{file_path.name}'")
+                        print(f"Move: '{file_path.name}'")
                         moved_count += 1
                     except Exception as e:
-                        print(f"错误: 无法移动 '{file_path.name}': {e}")
+                        print(f"Error: Cannot move '{file_path.name}': {e}")
         
         if not self.preview:
-            print(f"完成! 共移动 {moved_count} 个文件")
+            print(f"Done! Moved {moved_count} files")
     
     def execute_operations(self):
-        """执行预览的操作"""
+        """Execute previewed operations"""
         if not self.operations:
-            print("没有操作需要执行")
+            print("No operations to execute")
             return
         
-        print(f"\n准备执行 {len(self.operations)} 个操作:")
+        print(f"\nReady to execute {len(self.operations)} operations:")
         for i, (op_type, src, dst) in enumerate(self.operations, 1):
             print(f"{i}. {op_type}: '{src}' -> '{dst}'")
         
-        confirm = input("\n确认执行这些操作? (y/N): ")
+        confirm = input("\nConfirm execution? (y/N): ")
         if confirm.lower() == 'y':
             for op_type, src, dst in self.operations:
                 try:
@@ -150,9 +150,9 @@ class BatchFileProcessor:
                         shutil.copy2(src, dst)
                     elif op_type == "move":
                         shutil.move(src, dst)
-                    print(f"执行: {op_type} '{src}' -> '{dst}'")
+                    print(f"Execute: {op_type} '{src}' -> '{dst}'")
                 except Exception as e:
-                    print(f"错误: 无法执行 {op_type} '{src}': {e}")
-            print("所有操作已完成")
+                    print(f"Error: Cannot execute {op_type} '{src}': {e}")
+            print("All operations completed")
         else:
-            print("操作已取消")
+            print("Operation cancelled")

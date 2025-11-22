@@ -1,38 +1,38 @@
 """
-Markdown 预览工具
+Markdown Preview Tool
 
-功能：预览 Markdown 文件
-负责人：待分配
-优先级：低
+Features: Preview Markdown files
+Owner: Unassigned
+Priority: Low
 """
 
 
 def preview_markdown(content: str) -> str:
     """
-    预览 Markdown 内容 (简单版本,只返回原文)
+    Preview Markdown content (Simple version, returns original text only)
     
     Args:
-        content: Markdown 内容
+        content: Markdown content
         
     Returns:
-        Markdown 内容
+        Markdown content
     """
-    # TODO: 实现 Markdown 转 HTML 的功能
+    # TODO: Implement Markdown to HTML conversion
     return content
 
 
 def load_markdown_file(file_path: str) -> str:
     """
-    加载 Markdown 文件
+    Load Markdown file
     
     Args:
-        file_path: 文件路径
+        file_path: File path
         
     Returns:
-        文件内容
+        File content
     """
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
             return f.read()
     except Exception as e:
-        return f"错误: {str(e)}"
+        return f"Error: {str(e)}"

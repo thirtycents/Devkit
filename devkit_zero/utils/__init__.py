@@ -1,6 +1,6 @@
-"""工具函数模块"""
+"""Utility Functions Module"""
 
-# TODO: 添加通用工具函数
-# 例如：文件操作、字符串处理、数据验证等
+# TODO: Add common utility functions
+# E.g.: File operations, string processing, data validation, etc.
 
 __all__ = []

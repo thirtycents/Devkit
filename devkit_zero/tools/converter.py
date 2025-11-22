@@ -1,12 +1,12 @@
 """
-格式转换工具
+Format Conversion Tool
 
-功能：JSON/CSV/YAML格式互转
-负责人：待分配
-优先级：中
+Function: JSON/CSV/YAML format conversion
+Owner: Unassigned
+Priority: Medium
 """
 
-# TODO: 实现格式转换功能
+# TODO: Implement format conversion functionality
 import argparse
 import json
 import csv
@@ -15,19 +15,19 @@ from typing import Any, Dict, List
 
 
 def json_to_csv(json_data: Any, output_path: str = None) -> str:
-    """将 JSON 数据转换为 CSV 格式"""
+    """Convert JSON data to CSV format"""
     if isinstance(json_data, str):
         data = json.loads(json_data)
     else:
         data = json_data
 
     if not isinstance(data, list):
-        raise ValueError("JSON 数据必须是列表格式才能转换为 CSV")
+        raise ValueError("JSON data must be a list to convert to CSV")
 
     if not data:
         return ""
 
-    # 获取所有可能的字段
+    # Get all possible fields
     fieldnames = set()
     for item in data:
         if isinstance(item, dict):
@@ -40,7 +40,7 @@ def json_to_csv(json_data: Any, output_path: str = None) -> str:
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(data)
-        return f"CSV 文件已保存到: {output_path}"
+        return f"CSV file saved to: {output_path}"
     else:
         import io
         output = io.StringIO()
@@ -51,16 +51,16 @@ def json_to_csv(json_data: Any, output_path: str = None) -> str:
 
 
 def csv_to_json(csv_data: str, output_path: str = None) -> str:
-    """将 CSV 数据转换为 JSON 格式"""
+    """Convert CSV data to JSON format"""
     import io
 
     if os.path.exists(csv_data):
-        # 如果是文件路径
+        # If it is a file path
         with open(csv_data, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             data = list(reader)
     else:
-        # 如果是 CSV 字符串
+        # If it is a CSV string
         reader = csv.DictReader(io.StringIO(csv_data))
         data = list(reader)
 
@@ -69,38 +69,38 @@ def csv_to_json(csv_data: str, output_path: str = None) -> str:
     if output_path:
         with open(output_path, 'w', encoding='utf-8') as f:
             f.write(json_str)
-        return f"JSON 文件已保存到: {output_path}"
+        return f"JSON file saved to: {output_path}"
     else:
         return json_str
 
 
 def register_parser(subparsers):
-    """注册 converter 命令的参数解析器"""
-    parser = subparsers.add_parser('convert', help='数据格式转换工具')
-    parser.add_argument('--input', '-i', required=True, help='输入文件或数据')
+    """Register parser for converter command"""
+    parser = subparsers.add_parser('convert', help='Data format conversion tool')
+    parser.add_argument('--input', '-i', required=True, help='Input file or data')
     parser.add_argument('--from', dest='from_format', required=True,
-                        choices=['json', 'csv'], help='源格式')
+                        choices=['json', 'csv'], help='Source format')
     parser.add_argument('--to', dest='to_format', required=True,
-                        choices=['json', 'csv'], help='目标格式')
-    parser.add_argument('--output', '-o', help='输出文件路径')
+                        choices=['json', 'csv'], help='Target format')
+    parser.add_argument('--output', '-o', help='Output file path')
     parser.set_defaults(func=main)
 
 
 def main(args):
-    """converter 工具的主函数"""
+    """Main function for converter tool"""
     try:
         if args.from_format == 'json' and args.to_format == 'csv':
             return json_to_csv(args.input, args.output)
         elif args.from_format == 'csv' and args.to_format == 'json':
             return csv_to_json(args.input, args.output)
         else:
-            raise ValueError(f"不支持从 {args.from_format} 转换到 {args.to_format}")
+            raise ValueError(f"Conversion from {args.from_format} to {args.to_format} is not supported")
     except Exception as e:
-        raise RuntimeError(f"转换失败: {e}")
+        raise RuntimeError(f"Conversion failed: {e}")
 
 
 if __name__ == "__main__":
-    # 测试代码
-    test_json = '[{"name": "张三", "age": 25}, {"name": "李四", "age": 30}]'
+    # Test code
+    test_json = '[{"name": "Zhang San", "age": 25}, {"name": "Li Si", "age": 30}]'
     print("JSON to CSV:")
     print(json_to_csv(test_json))

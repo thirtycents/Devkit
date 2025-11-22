@@ -250,7 +250,7 @@ def register_parser(subparsers) -> None:
         help='Display raw robots.txt content without parsing'
     )
     
-    # 设置命令处理函数
+    # Set command handler function
     parser.set_defaults(func=main_function)
 
 def main():

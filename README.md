@@ -1,29 +1,29 @@
-# DevKit-Zero 项目框架
+# DevKit-Zero Project Framework
 
-> 🎯 **团队协作项目** - 这是一个为团队协作准备的项目框架，包含完整的开发规范和指导文档
+> 🎯 **Team Collaboration Project** - A project framework designed for team collaboration, including complete development standards and documentation.
 
 [![Python Support](https://img.shields.io/badge/python-3.8+-blue.svg)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-## 📋 项目简介
+## 📋 Introduction
 
-**DevKit-Zero** 是一个轻量级、零依赖的开发者工具箱项目框架。本仓库提供完整的项目结构和开发规范，适合团队协作开发。
+**DevKit-Zero** is a lightweight, zero-dependency developer toolkit framework. This repository provides a complete project structure and development standards, suitable for collaborative development.
 
-### 🎯 项目目标
-- 开发9个实用的开发者工具
-- 支持CLI、GUI和库导入三种使用方式
-- 零依赖设计（仅使用Python标准库）
-- 完整的文档和测试体系
+### 🎯 Project Goals
+- Develop 9 practical developer tools
+- Support **CLI**, **GUI**, and **Library Import** modes
+- Zero-dependency design (using only Python standard library)
+- Complete documentation and testing system
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 1. 克隆项目
+### 1. Clone Project
 ```bash
 git clone <your-repo-url>
 cd devkit
 ```
 
-### 2. 创建虚拟环境
+### 2. Create Virtual Environment
 ```bash
 # Windows
 python -m venv venv
@@ -34,120 +34,120 @@ python -m venv venv
 source venv/bin/activate
 ```
 
-### 3. 安装开发依赖
+### 3. Install Development Dependencies
 ```bash
 pip install -r requirements-dev.txt
 pip install -e .
 ```
 
-### 4. 运行项目
+### 4. Run Project
 
-#### 🖥️ GUI 界面方式
+#### 🖥️ GUI Mode
 ```bash
-# Windows: 双击运行
+# Windows: Double click to run
 start_gui.bat
 
-# 或使用命令行
+# Or use command line
 python -m devkit_zero.gui_main
 ```
 
-#### ⌨️ CLI 命令行方式
+#### ⌨️ CLI Mode
 ```bash
-# 查看所有可用命令
+# View all available commands
 python -m devkit_zero.cli --help
 
-# 使用具体工具
+# Use specific tools
 python -m devkit_zero.cli format --file test.py
 python -m devkit_zero.cli random uuid
 python -m devkit_zero.cli regex "\d+" "Hello 123"
 python -m devkit_zero.cli robots_checker https://google.com
 ```
 
-#### 📦 作为库使用
+#### 📦 Library Usage
 ```python
 from devkit_zero.tools import formatter, regex_tester
 
-# 格式化代码
+# Format code
 code, error = formatter.format_code("def test():pass", "python")
 print(code)
 
-# 测试正则表达式
+# Test regex
 tester = regex_tester.RegexTester()
 result = tester.test_pattern(r'\d+', 'Hello 123')
 print(result)
 ```
 
-### 5. 运行测试
+### 5. Run Tests
 ```bash
 pytest
 ```
 
-## 📁 项目结构
+## 📁 Project Structure
 
 ```
 devkit/
-├── devkit_zero/              # 主包目录
-│   ├── __init__.py          # 包初始化（需要实现）
-│   ├── __version__.py       # 版本信息（需要实现）
-│   ├── core.py              # 核心API（需要实现）
-│   ├── cli.py               # CLI入口（需要实现）
-│   ├── gui_main.py          # GUI入口（需要实现）
-│   ├── tools/               # 工具模块目录
-│   │   ├── __init__.py      # 工具注册（需要实现）
-│   │   ├── formatter.py     # 待实现
-│   │   ├── random_gen.py    # 待实现
-│   │   ├── diff_tool.py     # 待实现
-│   │   ├── converter.py     # 待实现
-│   │   ├── linter.py        # 待实现
-│   │   ├── regex_tester.py  # 待实现
-│   │   ├── batch_process.py # 待实现
-│   │   ├── markdown_preview.py # 待实现
-│   │   └── port_checker.py  # 待实现
-│   ├── ui/                  # UI模块
+├── devkit_zero/              # Main package directory
+│   ├── __init__.py          # Package init
+│   ├── __version__.py       # Version info
+│   ├── core.py              # Core API
+│   ├── cli.py               # CLI entry point
+│   ├── gui_main.py          # GUI entry point
+│   ├── tools/               # Tool modules
+│   │   ├── __init__.py      # Tool registration
+│   │   ├── formatter.py     # Code formatter
+│   │   ├── random_gen.py    # Random generator
+│   │   ├── diff_tool.py     # Diff tool
+│   │   ├── converter.py     # Format converter
+│   │   ├── linter.py        # Linter
+│   │   ├── regex_tester.py  # Regex tester
+│   │   ├── batch_process.py # Batch processor
+│   │   ├── markdown_preview.py # Markdown preview
+│   │   └── port_checker.py  # Port checker
+│   ├── ui/                  # UI modules
 │   │   ├── __init__.py
-│   │   └── gui_app.py       # 待实现
-│   └── utils/               # 工具函数
+│   │   └── gui_app.py       # GUI application
+│   └── utils/               # Utility functions
 │       └── __init__.py
-├── tests/                   # 测试目录
-│   ├── conftest.py         # 测试配置（需要实现）
-│   └── test_tools/         # 工具测试
-│       └── （为每个工具创建测试文件）
-├── docs/                    # 📚 文档中心
-│   ├── README.md           # 文档导航
-│   ├── team/               # 团队协作文档
+├── tests/                   # Tests directory
+│   ├── conftest.py         # Test configuration
+│   └── test_tools/         # Tool tests
+│       └── (Create test file for each tool)
+├── docs/                    # 📚 Documentation Center
+│   ├── README.md           # Documentation navigation
+│   ├── team/               # Team collaboration docs
 │   │   ├── BEGINNER_GUIDE.md
 │   │   ├── TEAM_GUIDELINES.md
 │   │   └── TASK_ASSIGNMENT.md
-│   ├── development/        # 开发文档
+│   ├── development/        # Development docs
 │   │   ├── PROJECT_FRAMEWORK.md
 │   │   ├── TOOL_TEMPLATE.md
 │   │   └── API_DESIGN.md
-│   └── reference/          # 参考文档
+│   └── reference/          # Reference docs
 │       └── QUICK_REFERENCE.md
-├── assets/                  # 资源文件
-├── templates/               # 代码模板
-├── static/                  # 静态文件
-├── .github/                # GitHub配置
-│   └── workflows/          # CI/CD（可选）
-├── .gitignore              # Git忽略配置
-├── setup.py                # 安装配置
-├── pyproject.toml          # 项目元数据
-├── requirements.txt        # 运行依赖
-├── requirements-dev.txt    # 开发依赖
-├── CHANGELOG.md            # 版本记录
-└── README.md               # 本文件
+├── assets/                  # Assets
+├── templates/               # Code templates
+├── static/                  # Static files
+├── .github/                # GitHub config
+│   └── workflows/          # CI/CD (Optional)
+├── .gitignore              # Git ignore
+├── setup.py                # Setup script
+├── pyproject.toml          # Project metadata
+├── requirements.txt        # Runtime dependencies
+├── requirements-dev.txt    # Dev dependencies
+├── CHANGELOG.md            # Changelog
+└── README.md               # This file
 ```
 
-## 🛠️ 需要实现的工具
+## 🛠️ Tools to Implement
 
-### 1. formatter (代码格式化器)
-- **负责人**: 待分配
-- **功能**: Python/JavaScript代码格式化
-- **优先级**: 高
+### 1. formatter (Code Formatter)
+- **Owner**: TBD
+- **Function**: Python/JavaScript code formatting
+- **Priority**: High
 
-### 2. random_gen (随机数据生成器)
-- **负责人**: 待分配
-- **功能**: 生成UUID、密码、随机数
+### 2. random_gen (Random Data Generator)
+- **Owner**: TBD
+- **Function**: Generate UUID, passwords, random numbers
 - **优先级**: 高
 
 ### 3. diff_tool (文件差异比较)

@@ -1,6 +1,6 @@
-"""UI模块包"""
+"""UI Module Package"""
 
-# TODO: 导入UI组件
+# TODO: Import UI components
 from .gui_app import DevKitZeroGUI
 from . import gui_app
 __all__ = ["DevKitZeroGUI"]

@@ -1,4 +1,4 @@
-"""版本信息"""
+"""Version Information"""
 __version__ = "1.0.0"
 __author__ = "DevKit-Zero Team"
 __email__ = "<EMAIL>"
